@@ -27,3 +27,6 @@ Thumbs.db
 
 # Checkpoints
 checkpoints/
+
+#Claude
+.claude
