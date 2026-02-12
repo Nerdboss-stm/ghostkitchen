@@ -1,79 +1,161 @@
-import hashlib
+# transformations/bronze_to_silver/order_schema_alignment.py
+
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import *
+from pyspark.sql.types import LongType, TimestampType, BooleanType, StringType
 from pyspark.sql import Window
+from delta.tables import DeltaTable
+
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 BRONZE_BASE = "s3a://ghostkitchen-lakehouse/bronze"
 SILVER_BASE = "s3a://ghostkitchen-lakehouse/silver"
 
-def normalize_uber_eats(df: DataFrame) -> DataFrame:
+
+def parse_bronze(spark: SparkSession) -> tuple:
+    """
+    Read Bronze table and split into 3 platform DataFrames.
+    All data lives in raw_value as JSON string — extract platform field first.
+    """
+    df = spark.read.format("delta").load(f"{BRONZE_BASE}/orders")
+
+    # Extract platform from JSON to filter — don't parse everything yet
+    df = df.withColumn("platform", F.get_json_object(F.col("raw_value"), "$.platform"))
+
+    uber_raw     = df.filter(F.col("platform") == "uber_eats")
+    doordash_raw = df.filter(F.col("platform") == "doordash")
+    ownapp_raw   = df.filter(F.col("platform") == "own_app")
+
+    return uber_raw, doordash_raw, ownapp_raw
+
+
+def normalize_uber(df: DataFrame) -> DataFrame:
+    rv = F.col("raw_value")
     return df.select(
         F.when(
-            F.col("customer_email").isNotNull(),
-            F.sha2(F.lower(F.trim(F.col("customer_email"))), 256)
+            F.get_json_object(rv, "$.customer_email").isNotNull(),
+            F.sha2(F.lower(F.trim(F.get_json_object(rv, "$.customer_email"))), 256)
         ).otherwise(
-            F.sha2(F.concat(F.lit("uber_eats"), F.col("customer_uid")), 256)
+            F.sha2(F.concat(F.lit("uber_eats"), F.get_json_object(rv, "$.customer_uid")), 256)
         ).alias("customer_key"),
-        (F.round(F.col("total_amount") * 100, 0).cast(LongType())).alias("order_total_cents"),
-        F.to_utc_timestamp(F.to_timestamp(F.col("order_timestamp")), "UTC").alias("order_timestamp"),
-        F.col("kitchen_id"),
-        F.col("brand_name"),
+
+        (F.round(F.get_json_object(rv, "$.total_amount").cast("double") * 100, 0)
+            .cast(LongType())).alias("order_total_cents"),
+
+        F.to_utc_timestamp(
+            F.to_timestamp(F.get_json_object(rv, "$.order_timestamp")), "UTC"
+        ).alias("order_timestamp"),
+
+        F.get_json_object(rv, "$.kitchen_id").alias("kitchen_id"),
+        F.get_json_object(rv, "$.brand_name").alias("brand_name"),
         F.lit("uber_eats").alias("platform"),
-        F.concat(F.lit("uber_eats_"), F.col("order_id")).alias("platform_order_id"),
-        F.to_json(F.col("items")).alias("items_json"),
-        F.lower(F.trim(F.col("customer_email"))).alias("raw_email"),
-        F.current_timestamp().alias("ingestion_timestamp"),
-        ((F.unix_timestamp(F.current_timestamp()) - 
-          F.unix_timestamp(F.to_timestamp(F.col("order_timestamp")))) > 86400
-        ).alias("is_late_arriving")
+
+        F.get_json_object(rv, "$.customer_uid").alias("platform_customer_id"),
+
+        F.concat(F.lit("uber_eats_"),
+                 F.get_json_object(rv, "$.order_id")).alias("platform_order_id"),
+
+        F.get_json_object(rv, "$.items").alias("items_json"),
+
+        F.lower(F.trim(
+            F.get_json_object(rv, "$.customer_email")
+        )).alias("raw_email"),
+
+        F.col("ingestion_timestamp"),
+
+        ((F.unix_timestamp(F.current_timestamp()) -
+          F.unix_timestamp(F.to_timestamp(
+              F.get_json_object(rv, "$.order_timestamp")))) > 86400
+         ).alias("is_late_arriving")
     )
+
 
 def normalize_doordash(df: DataFrame) -> DataFrame:
+    rv = F.col("raw_value")
     return df.select(
         F.when(
-            F.col("customer_email").isNotNull(),
-            F.sha2(F.lower(F.trim(F.col("customer_email"))), 256)
+            F.get_json_object(rv, "$.customer_email").isNotNull(),
+            F.sha2(F.lower(F.trim(F.get_json_object(rv, "$.customer_email"))), 256)
         ).otherwise(
-            F.sha2(F.concat(F.lit("doordash"), F.col("dasher_customer_id")), 256)
+            F.sha2(F.concat(F.lit("doordash"),
+                            F.get_json_object(rv, "$.dasher_customer_id")), 256)
         ).alias("customer_key"),
-        (F.round(F.col("order_value") * 100, 0).cast(LongType())).alias("order_total_cents"),
-        F.to_utc_timestamp(F.to_timestamp(F.col("created_at")), "UTC").alias("order_timestamp"),
-        F.col("store_id").alias("kitchen_id"),
-        F.col("store_name").alias("brand_name"),
+
+        (F.round(F.get_json_object(rv, "$.order_value").cast("double") * 100, 0)
+            .cast(LongType())).alias("order_total_cents"),
+
+        F.to_utc_timestamp(
+            F.to_timestamp(F.get_json_object(rv, "$.created_at")), "UTC"
+        ).alias("order_timestamp"),
+
+        F.get_json_object(rv, "$.store_id").alias("kitchen_id"),
+        F.get_json_object(rv, "$.store_name").alias("brand_name"),
         F.lit("doordash").alias("platform"),
-        F.concat(F.lit("doordash_"), F.col("order_id")).alias("platform_order_id"),
-        F.to_json(F.col("line_items")).alias("items_json"),
-        F.lower(F.trim(F.col("customer_email"))).alias("raw_email"),
-        F.current_timestamp().alias("ingestion_timestamp"),
-        ((F.unix_timestamp(F.current_timestamp()) - 
-          F.unix_timestamp(F.to_timestamp(F.col("created_at")))) > 86400
-        ).alias("is_late_arriving")
+
+        F.get_json_object(rv, "$.dasher_customer_id").alias("platform_customer_id"),
+
+        F.concat(F.lit("doordash_"),
+                 F.get_json_object(rv, "$.order_id")).alias("platform_order_id"),
+
+        F.get_json_object(rv, "$.line_items").alias("items_json"),
+
+        F.lower(F.trim(
+            F.get_json_object(rv, "$.customer_email")
+        )).alias("raw_email"),
+
+        F.col("ingestion_timestamp"),
+
+        ((F.unix_timestamp(F.current_timestamp()) -
+          F.unix_timestamp(F.to_timestamp(
+              F.get_json_object(rv, "$.created_at")))) > 86400
+         ).alias("is_late_arriving")
     )
 
-def normalize_own_app(df: DataFrame) -> DataFrame:
+
+def normalize_ownapp(df: DataFrame) -> DataFrame:
+    rv = F.col("raw_value")
     return df.select(
         F.when(
-            F.col("email").isNotNull(),
-            F.sha2(F.lower(F.trim(F.col("email"))), 256)
+            F.get_json_object(rv, "$.email").isNotNull(),
+            F.sha2(F.lower(F.trim(F.get_json_object(rv, "$.email"))), 256)
         ).otherwise(
-            F.sha2(F.concat(F.lit("own_app"), F.col("user_id")), 256)
+            F.sha2(F.concat(F.lit("own_app"),
+                            F.get_json_object(rv, "$.user_id")), 256)
         ).alias("customer_key"),
-        F.col("amount_cents").cast(LongType()).alias("order_total_cents"),
+
+        # amount_cents is already integer cents — just cast to Long
+        F.get_json_object(rv, "$.amount_cents").cast(LongType()).alias("order_total_cents"),
+
+        # timestamp is ISO string in OwnApp (not Unix epoch)
         F.to_utc_timestamp(
-            F.to_timestamp(F.col("timestamp").cast(LongType())), "UTC"
+            F.to_timestamp(F.get_json_object(rv, "$.timestamp")), "UTC"
         ).alias("order_timestamp"),
-        F.col("kitchen_id"),
-        F.col("brand").alias("brand_name"),
+
+        F.get_json_object(rv, "$.kitchen_id").alias("kitchen_id"),
+        F.get_json_object(rv, "$.brand").alias("brand_name"),
         F.lit("own_app").alias("platform"),
-        F.concat(F.lit("own_app_"), F.col("order_id")).alias("platform_order_id"),
-        F.to_json(F.col("items")).alias("items_json"),
-        F.lower(F.trim(F.col("email"))).alias("raw_email"),
-        F.current_timestamp().alias("ingestion_timestamp"),
-        ((F.unix_timestamp(F.current_timestamp()) - 
-          F.unix_timestamp(F.col("timestamp").cast(LongType()))) > 86400
-        ).alias("is_late_arriving")
+
+        F.get_json_object(rv, "$.user_id").alias("platform_customer_id"),
+
+        F.concat(F.lit("own_app_"),
+                 F.get_json_object(rv, "$.order_id")).alias("platform_order_id"),
+
+        F.get_json_object(rv, "$.items").alias("items_json"),
+
+        F.lower(F.trim(
+            F.get_json_object(rv, "$.email")
+        )).alias("raw_email"),
+
+        F.col("ingestion_timestamp"),
+
+        ((F.unix_timestamp(F.current_timestamp()) -
+          F.unix_timestamp(F.to_timestamp(
+              F.get_json_object(rv, "$.timestamp")))) > 86400
+         ).alias("is_late_arriving")
     )
+
 
 def deduplicate_orders(df: DataFrame) -> DataFrame:
     window = Window.partitionBy("platform", "platform_order_id") \
@@ -82,28 +164,29 @@ def deduplicate_orders(df: DataFrame) -> DataFrame:
              .filter(F.col("row_num") == 1) \
              .drop("row_num")
 
-def align_all_platforms(uber_eats_df, doordash_df, own_app_df) -> DataFrame:
-    combined = normalize_uber_eats(uber_eats_df) \
+
+def align_all_platforms(uber_df, doordash_df, ownapp_df) -> DataFrame:
+    combined = normalize_uber(uber_df) \
         .union(normalize_doordash(doordash_df)) \
-        .union(normalize_own_app(own_app_df))
+        .union(normalize_ownapp(ownapp_df))
     return deduplicate_orders(combined)
 
-def run_schema_alignment(spark: SparkSession):
-    # CORRECT — one table, filter by platform
-    orders_df = spark.read.format("delta").load(f"{BRONZE_BASE}/orders")
 
-    uber_eats_df = orders_df.filter(F.col("platform") == "uber_eats")
-    doordash_df = orders_df.filter(F.col("platform") == "doordash")
-    own_app_df = orders_df.filter(F.col("platform") == "own_app") 
-    silver_df = align_all_platforms(uber_eats_df, doordash_df, own_app_df)
+def run_schema_alignment(spark: SparkSession):
+    uber_raw, doordash_raw, ownapp_raw = parse_bronze(spark)
+    silver_df = align_all_platforms(uber_raw, doordash_raw, ownapp_raw)
+
     silver_df.write \
         .format("delta") \
         .mode("overwrite") \
         .option("mergeSchema", "true") \
         .save(f"{SILVER_BASE}/orders/normalized")
-    print(f"Silver orders written: {silver_df.count()} rows")
+
+    print(f"✅ Silver orders written: {silver_df.count()} rows")
+
 
 if __name__ == "__main__":
+
     from ingestion.spark_config import get_spark_session
     spark = get_spark_session("SchemaAlignment")
     run_schema_alignment(spark)
