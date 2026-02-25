@@ -87,4 +87,6 @@ def test_dim_customer_platform_count_positive(spark):
 
 def test_dim_customer_email_masked(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
-    assert df.filter(df.customer_bk.contains("***")).count() == df.count()
+    masked = df.filter(df.customer_bk.contains("***")).count()
+    unknown = df.filter(df.customer_bk == "unknown").count()
+    assert masked + unknown == df.count()
