@@ -12,6 +12,7 @@ def assign_dim_brand(spark: SparkSession) -> DataFrame:
 
     df = spark.read.csv(seed_path, header=True, inferSchema=True)
     df = df.toDF(*[c.lower() for c in df.columns])
+    df = df.withColumn("brand_key", F.abs(F.hash(F.col("brand_name"))).cast("long"))
     return df
 
 def run_dim_brand(spark: SparkSession):
@@ -31,3 +32,4 @@ if __name__ == "__main__":
     spark = get_spark_session("Dimension Brand")
     run_dim_brand(spark)
     spark.read.format("delta").load("s3a://ghostkitchen-lakehouse/gold/dim_brand").printSchema()
+    spark.read.format("delta").load("s3a://ghostkitchen-lakehouse/bronze/sensors").printSchema()
