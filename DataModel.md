@@ -1,169 +1,410 @@
-# GhostKitchen — Data Model Document
+# GhostKitchen — Complete Data Model Reference
 
-## Modeling Philosophy
+## Project Overview
+Dark kitchen intelligence platform. 50 kitchens across 10 cities, each running 3-5 virtual restaurant brands. Orders from 3 platforms (Uber Eats, DoorDash, OwnApp). Kitchen IoT sensors, delivery GPS, menu CDC, customer feedback.
 
-GhostKitchen uses a two-stage modeling approach across the Medallion Architecture:
+## Architecture Choice
 
-- **Silver layer**: Data Vault modeling — designed for flexibility, auditability, and integrating data from multiple sources (3 delivery platforms, sensors, GPS, menu CDC)
-- **Gold layer**: Star Schema — designed for fast analytical queries and dashboard performance
+### Silver Layer: DATA VAULT
+**Why Data Vault?** Three platforms define "customer" and "order" differently:
+- Uber uses `customer_uid`, `total_amount`, `order_timestamp`
+- DoorDash uses `dasher_customer_id`, `order_value`, `created_at`
+- OwnApp uses `user_id`, `amount_cents` (integer!), `timestamp`
 
-This separation exists because Data Vault handles the complexity of integrating messy, multi-source data, while Star Schema gives analysts the simple join patterns they expect.
+Data Vault's hub/link/satellite structure handles conflicting source schemas by:
+- Hubs: stable identity (one customer, one order — regardless of source)
+- Links: relationships between entities
+- Satellites: source-specific attributes with SCD2 versioning
 
-## Key Concepts
+**Why NOT Star Schema in Silver?** Star would force premature schema alignment. Data Vault keeps raw source attributes in satellites while unifying identity in hubs.
 
-### Facts vs Dimensions
+**Why NOT Data Vault everywhere?** Data Vault is too many joins for BI tools. Gold uses Star Schema for analyst-friendly queries.
 
-**Fact tables** store measurable events or transactions — things that happened, with numbers that can be aggregated (summed, counted, averaged). Each row represents one event.
+### Gold Layer: STAR SCHEMA
+**Why Star?** Analysts need: `SELECT sum(order_total) FROM fact_order JOIN dim_kitchen ON ... GROUP BY city`. Star makes this a simple 2-table join. Data Vault would need 5+ joins for the same query.
 
-**Dimension tables** store descriptive context — the "who, what, where, when" that gives meaning to facts. Analysts filter and group by dimensions.
+**Why NOT Snowflake Schema?** GhostKitchen's dimensions aren't deeply hierarchical (unlike PulseTrack's medical codes). Kitchen, brand, zone are flat. Star is simpler and sufficient.
 
-| Type | Example | What a Row Represents | Key Columns |
-|---|---|---|---|
-| Fact | `fact_orders` | One order | `order_total`, `item_count`, `delivery_time_minutes` |
-| Fact | `fact_sensor_readings` | One sensor reading | `value`, `unit`, `is_anomaly` |
-| Fact | `fact_gps_pings` | One GPS ping | `lat`, `lon`, `speed_mph` |
-| Dimension | `dim_kitchen` | One kitchen | `city`, `brands`, `capacity` |
-| Dimension | `dim_customer` | One unified customer | `email`, `name`, `first_seen_date` |
-| Dimension | `dim_menu_item` | One menu item (versioned) | `name`, `price`, `category`, `valid_from`, `valid_to` |
+---
 
-**How they connect**: Facts reference dimensions through foreign keys. To answer "What was total revenue for Houston kitchens last month?", you JOIN `fact_orders.kitchen_id` to `dim_kitchen.kitchen_id`, filter by `city = 'Houston'`, and SUM `order_total`.
+## DATA VAULT (Silver Layer)
 
-### Schema Alignment (Silver Layer)
+### HUBS (Identity — one row per unique business entity)
 
-The three delivery platforms use different field names for the same data. Silver normalizes these into a single unified schema:
+#### hub_customer
+| Column | Type | Description |
+|--------|------|-------------|
+| customer_hk | STRING | Hash key: MD5(customer_bk) — surrogate identity |
+| customer_bk | STRING | Best-known business key = normalized email (lowercase, trimmed) |
+| load_ts | TIMESTAMP | When this hub record was first created |
+| record_source | STRING | Which source first introduced this customer (uber_eats/doordash/own_app) |
 
-| Concept | Uber Eats | DoorDash | OwnApp | Unified (Silver) |
-|---|---|---|---|---|
-| Kitchen | `kitchen_id` | `store_id` | `kitchen_id` | `kitchen_id` |
-| Customer ID | `customer_uid` | `dasher_customer_id` | `user_id` | `platform_customer_id` |
-| Order total | `total_amount` (float) | `order_value` (float) | `amount_cents` (integer) | `order_total_cents` (integer) |
-| Items | `items` | `line_items` | `items` | `items` |
-| Timestamp | `order_timestamp` | `created_at` | `timestamp` | `event_timestamp` |
-| Brand | `brand_name` | `store_name` | `brand` | `brand_name` |
+**Why hash key?** MD5 hash of the business key gives a deterministic, stable surrogate key. Same email always produces same hash — idempotent.
 
-**Money handling**: The unified schema stores money as integer cents (`order_total_cents`), following OwnApp's pattern. Integer math avoids floating point precision errors that accumulate across millions of transactions. Gold layer converts to decimal dollars for analyst-friendly display.
+**Why email as business key?** It's the only identifier shared across all 3 platforms. Platform-specific IDs (ue_cust_44821) are stored in satellites, not the hub.
 
-### Slowly Changing Dimensions (SCD Type 2)
+**PDF Reference:** Surrogate Keys (DM pages 15-16), Identity Resolution (DM pages 40-44)
 
-Menu items change over time — prices update, descriptions change, items get deactivated. SCD Type 2 tracks the complete history by creating a new row for each change while preserving all previous versions.
+#### hub_order
+| Column | Type | Description |
+|--------|------|-------------|
+| order_hk | STRING | Hash key: MD5(order_bk) |
+| order_bk | STRING | Composite: `{platform}_{order_id}` (e.g., "uber_eats_UE-20240615-882713") |
+| load_ts | TIMESTAMP | First seen |
+| record_source | STRING | Source platform |
 
-Example: Smash Burger's price changes twice:
+**Why composite business key?** Order IDs are only unique WITHIN a platform. "UE-001" on Uber and "UE-001" on OwnApp could be different orders. Prefixing with platform ensures global uniqueness.
 
-| item_sk | item_id | name | price | category | active | valid_from | valid_to | is_current |
-|---|---|---|---|---|---|---|---|---|
-| 1 | BB-01 | Smash Burger | 8.99 | burgers | true | 2026-01-01 | 2026-02-15 | false |
-| 2 | BB-01 | Smash Burger | 10.99 | burgers | true | 2026-02-15 | 2026-03-01 | false |
-| 3 | BB-01 | Smash Burger | 9.49 | burgers | true | 2026-03-01 | NULL | true |
+**PDF Reference:** Natural Keys vs Surrogate Keys (DM pages 15-16)
 
-`item_sk` is a surrogate key (auto-incrementing, unique per version). `item_id` is the natural key (the business identifier that stays the same). `valid_from` / `valid_to` define the window when this version was active. `is_current` flags the latest version for simple queries.
+#### hub_kitchen
+| Column | Type | Description |
+|--------|------|-------------|
+| kitchen_hk | STRING | Hash key: MD5(kitchen_id) |
+| kitchen_bk | STRING | kitchen_id (e.g., "K-HOU-01") — already globally unique |
+| load_ts | TIMESTAMP | First seen |
+| record_source | STRING | Source system |
 
-**How it connects to CDC**: Each menu CDC event with `op: "u"` contains `before` and `after` states. The Silver layer uses `before` to close the old row (set `valid_to`) and `after` to insert the new row (set `valid_from`). This is why the Debezium envelope captures both states — without `before`, you wouldn't know when the old version ended.
+#### hub_menu_item
+| Column | Type | Description |
+|--------|------|-------------|
+| menu_item_hk | STRING | Hash key: MD5(brand_id + item_code) |
+| menu_item_bk | STRING | Composite: `{brand_id}_{item_id}` (e.g., "burger_beast_BB-01") |
+| load_ts | TIMESTAMP | First seen |
+| record_source | STRING | Source (menu_cdc) |
 
-**Point-in-time correctness**: When an analyst asks "what was the price when order #12345 was placed?", you join `fact_orders` to `dim_menu_item` where `order_timestamp BETWEEN valid_from AND valid_to`. This returns the price that was active at the time of the order, not today's price.
+### LINKS (Relationships between hubs)
 
-### Identity Resolution
+#### link_order_customer
+| Column | Type | Description |
+|--------|------|-------------|
+| link_hk | STRING | Hash key: MD5(order_hk + customer_hk) |
+| order_hk | STRING | FK → hub_order |
+| customer_hk | STRING | FK → hub_customer |
+| load_ts | TIMESTAMP | When relationship was first recorded |
+| record_source | STRING | Source platform |
 
-The same customer can order through multiple platforms. Each platform assigns its own customer ID:
+**Purpose:** Connects orders to customers. Enables: "Show all orders by customer X across all platforms."
 
-- Uber Eats: `customer_uid: "ue_cust_48291"`
-- DoorDash: `dasher_customer_id: "dd_u_73625"`
-- OwnApp: `user_id: "app_john_482"`
+#### link_order_kitchen_brand
+| Column | Type | Description |
+|--------|------|-------------|
+| link_hk | STRING | Hash key: MD5(order_hk + kitchen_hk + brand_id) |
+| order_hk | STRING | FK → hub_order |
+| kitchen_hk | STRING | FK → hub_kitchen |
+| brand_id | STRING | Brand that fulfilled the order |
+| load_ts | TIMESTAMP | When recorded |
+| record_source | STRING | Source platform |
 
-These IDs are completely different, but they may represent the same person.
+**Purpose:** Which kitchen+brand combo fulfilled which order. Captures the many-to-many: one kitchen runs multiple brands.
 
-**Deterministic matching**: Both Uber and DoorDash events include `customer_email`. If two platform-specific IDs share the same email, they are the same person. A surrogate key (`customer_sk`) is generated and maps all platform IDs to a single unified profile in `dim_customer`.
+### SATELLITES (Versioned attributes — SCD2)
 
-**Challenge**: 2% of events have null emails (deliberately injected). These cannot be matched deterministically. Probabilistic matching (similar delivery zones, order patterns, names) could supplement deterministic matching but introduces uncertainty.
+#### sat_customer_profile
+| Column | Type | Description |
+|--------|------|-------------|
+| customer_hk | STRING | FK → hub_customer |
+| name | STRING | Customer's name |
+| email | STRING | Current email |
+| phone | STRING | Phone number (nullable) |
+| platform_ids | JSON | Map: {"uber_eats": "ue_cust_44821", "doordash": "dd_u_7721"} |
+| city | STRING | Derived from most recent delivery address |
+| effective_start | TIMESTAMP | When this version became active |
+| effective_end | TIMESTAMP | When this version was superseded (null = current) |
+| is_current | BOOLEAN | True if this is the latest version |
+| record_source | STRING | Which platform provided this update |
 
-**Identity mapping table**:
+**SCD Type:** 2 — New row when email changes, new platform ID discovered, or identity merge happens.
+**PDF Reference:** SCD Type 2 (DM pages 17-18), Customer 360 (DM pages 101-111)
 
-| customer_sk | platform | platform_customer_id | email | matched_via |
-|---|---|---|---|---|
-| 1 | uber_eats | ue_cust_48291 | john@gmail.com | email |
-| 1 | doordash | dd_u_73625 | john@gmail.com | email |
-| 1 | own_app | app_john_482 | john@gmail.com | email |
-| 2 | uber_eats | ue_cust_91034 | NULL | unmatched |
+#### sat_order_details
+| Column | Type | Description |
+|--------|------|-------------|
+| order_hk | STRING | FK → hub_order |
+| items_json | JSON | Array of {item_id, name, qty, price} — normalized from all platforms |
+| order_total_cents | BIGINT | Total in cents (normalized from float/cents across platforms) |
+| delivery_zone | STRING | Normalized zone code |
+| platform_raw_payload | JSON | Original untransformed event (for audit/debugging) |
+| effective_start | TIMESTAMP | Version start |
+| effective_end | TIMESTAMP | Version end |
+| is_current | BOOLEAN | Latest version flag |
 
-## Silver Layer: Data Vault Model
+**Why store platform_raw_payload?** So you can always trace back to the original event if the normalized values look wrong. This is audit/lineage practice.
 
-Data Vault separates data into three types of tables:
+#### sat_order_status
+| Column | Type | Description |
+|--------|------|-------------|
+| order_hk | STRING | FK → hub_order |
+| order_status | STRING | placed/confirmed/preparing/ready/picked_up/delivered/cancelled |
+| status_timestamp | TIMESTAMP | When this status was recorded |
+| previous_status | STRING | What status came before (null for 'placed') |
+| effective_start | TIMESTAMP | Version start |
+| effective_end | TIMESTAMP | Version end |
+| is_current | BOOLEAN | Latest version |
 
-**Hubs**: Core business entities with their business keys. One row per unique entity. Never changes once created.
-- `hub_order` — one row per unique `order_id`
-- `hub_customer` — one row per resolved customer (after identity resolution)
-- `hub_kitchen` — one row per unique `kitchen_id`
-- `hub_menu_item` — one row per unique `item_id`
+**This is the "trip_state_history" pattern** from DM pages 112-124. Orders transition through states exactly like rides.
 
-**Links**: Relationships between hubs. Captures which entities are connected.
-- `link_order_customer` — which customer placed which order
-- `link_order_kitchen` — which kitchen fulfilled which order
-- `link_order_item` — which items were in which order (exploded from nested array)
+#### sat_menu_item_details
+| Column | Type | Description |
+|--------|------|-------------|
+| menu_item_hk | STRING | FK → hub_menu_item |
+| name | STRING | Item display name |
+| description | STRING | Item description |
+| price_cents | INT | Price in cents |
+| category | STRING | burgers/sides/drinks/mains/pizza/desserts |
+| is_active | BOOLEAN | Currently available? |
+| effective_start | TIMESTAMP | When this version became active |
+| effective_end | TIMESTAMP | When superseded |
+| is_current | BOOLEAN | Latest version |
 
-**Satellites**: Descriptive attributes with full history. This is where SCD Type 2 lives.
-- `sat_order_details` — order total, status, delivery zone, timestamps
-- `sat_customer_profile` — name, email, platform IDs
-- `sat_menu_item_details` — name, price, category, description (with `valid_from`/`valid_to`)
+**SCD Type:** 2 — Driven by CDC events (menu_change_generator). When price changes from $7.99 to $8.99:
+- Old row gets effective_end = change_timestamp, is_current = false
+- New row gets effective_start = change_timestamp, is_current = true
 
-**Why Data Vault for Silver?** It handles multi-source integration naturally. Each platform's orders flow into the same `hub_order` and `sat_order_details` after schema alignment. New sources can be added without restructuring existing tables. Full history is preserved automatically through satellite versioning.
+**PDF Reference:** SCD2 via CDC (DM pages 17-18, SD pages 39-42)
 
-## Gold Layer: Star Schema
+---
 
-Gold transforms the flexible Data Vault structure into simple, query-optimized star schemas. Each star schema serves a specific analytical domain.
+## DIMENSIONAL MODEL (Gold Layer)
 
-### Orders Star Schema
+### FACT TABLES
 
-```
-                    dim_date
-                      |
-dim_customer --- fact_orders --- dim_kitchen
-                      |
-                  dim_menu_item
-```
+#### fact_order
+| Column | Type | Description |
+|--------|------|-------------|
+| order_key | BIGINT | Surrogate key (auto-increment) |
+| customer_key | BIGINT | FK → dim_customer |
+| kitchen_key | BIGINT | FK → dim_kitchen |
+| brand_key | BIGINT | FK → dim_brand |
+| date_key | INT | FK → dim_date (YYYYMMDD) |
+| time_key | INT | FK → dim_time (HHMM) |
+| zone_key | BIGINT | FK → dim_delivery_zone |
+| platform | STRING | uber_eats / doordash / own_app |
+| order_total_cents | BIGINT | Normalized total in cents |
+| item_count | INT | Number of line items |
+| order_placed_ts | TIMESTAMP | When order was placed |
+| order_delivered_ts | TIMESTAMP | When delivered (null if not yet) |
+| delivery_duration_min | FLOAT | Minutes from placed to delivered |
+| is_cancelled | BOOLEAN | Was the order cancelled? |
+| cancellation_reason | STRING | Reason if cancelled (nullable) |
 
-**fact_orders**: One row per order. Grain = one order.
-- `order_sk`, `order_id`, `customer_sk`, `kitchen_sk`, `date_sk`
-- Measures: `order_total_cents`, `item_count`, `delivery_time_minutes`
-- Degenerate dimensions: `platform`, `order_status`
+**Grain:** One row per order (FINAL STATE). Not per state transition — that's fact_order_state_history.
+**Why this grain?** CEO dashboard needs: total orders, total revenue, avg delivery time. These are answerable with one-row-per-order grain.
+**PDF Reference:** Grain selection (DM pages 21, 27-29)
 
-**fact_order_items**: One row per item per order. Grain = one line item.
-- `order_sk`, `item_sk`, `quantity`, `line_total_cents`
-- Enables: "What is our most popular menu item?" and "What is the average items per order?"
+#### fact_order_state_history
+| Column | Type | Description |
+|--------|------|-------------|
+| state_key | BIGINT | Surrogate key |
+| order_key | BIGINT | FK → fact_order |
+| order_status | STRING | placed/confirmed/preparing/ready/picked_up/delivered/cancelled |
+| status_timestamp | TIMESTAMP | When this state was entered |
+| previous_status | STRING | Prior state |
+| time_in_previous_status_sec | INT | Seconds spent in the previous state |
+| effective_start_ts | TIMESTAMP | Start of this state |
+| effective_end_ts | TIMESTAMP | End of this state (null if current) |
+| is_current | BOOLEAN | Is this the latest state? |
 
-**dim_kitchen**: `kitchen_sk`, `kitchen_id`, `city`, `brands`
-**dim_customer**: `customer_sk`, `name`, `email`, `platforms_used`, `first_order_date`
-**dim_menu_item**: `item_sk`, `item_id`, `name`, `price`, `category`, `brand` (current version for most queries; SCD2 available via Silver for point-in-time)
-**dim_date**: `date_sk`, `date`, `day_of_week`, `month`, `quarter`, `is_weekend`
+**Grain:** One row per order × status change. This is the trip_state_history pattern from DM case study 4 (pages 112-124).
+**Why separate from fact_order?** Different grain. fact_order = one row per order (for aggregation). fact_order_state_history = one row per transition (for bottleneck analysis: "how long do orders spend in preparing state?").
 
-### Sensor Analytics Star Schema
+#### fact_sensor_hourly
+| Column | Type | Description |
+|--------|------|-------------|
+| kitchen_key | BIGINT | FK → dim_kitchen |
+| sensor_type | STRING | temperature/humidity/fryer_timer/cooler_door |
+| zone | STRING | fryer_station/grill_station/cooler/kitchen_ambient |
+| date_key | INT | FK → dim_date |
+| hour | INT | 0-23 |
+| avg_value | FLOAT | Average reading in the hour |
+| min_value | FLOAT | Minimum reading |
+| max_value | FLOAT | Maximum reading |
+| reading_count | INT | Number of readings in the hour |
+| anomaly_count | INT | Readings flagged as anomalous |
 
-**fact_sensor_hourly**: Pre-aggregated sensor readings. Grain = one sensor, one hour.
-- `sensor_id`, `kitchen_sk`, `hour_sk`
-- Measures: `avg_value`, `min_value`, `max_value`, `reading_count`, `anomaly_count`, `null_count`
-- Enables: "Show me hourly temperature trends for Kitchen K-HOU-01 fryers" without scanning millions of raw readings
+**Grain:** One row per kitchen × sensor_type × zone × hour.
+**Why hourly rollup?** Raw sensors produce ~1.3M events/day. Dashboards don't need per-second resolution. Hourly rollup serves 95% of queries. Atomic events stay in Silver for ML/debugging.
+**PDF Reference:** Pre-Aggregations (DM pages 58-60), dual-grain strategy (DM page 37)
 
-**Why pre-aggregate?** Raw sensor data at 15 events/second produces ~1.3 million rows per day. Most analytics questions don't need per-second granularity. Hourly rollups reduce query volume by 99.97% while preserving the patterns analysts care about. Raw data remains available in Bronze/Silver for deep investigation when needed.
+#### fact_delivery_trip
+| Column | Type | Description |
+|--------|------|-------------|
+| delivery_key | BIGINT | Surrogate key |
+| order_key | BIGINT | FK → fact_order |
+| driver_key | BIGINT | FK → dim_driver (or just driver_id) |
+| zone_key | BIGINT | FK → dim_delivery_zone |
+| date_key | INT | FK → dim_date |
+| pickup_ts | TIMESTAMP | When driver picked up food |
+| dropoff_ts | TIMESTAMP | When delivered to customer |
+| distance_km | FLOAT | Total route distance |
+| duration_min | FLOAT | Delivery duration |
+| gps_ping_count | INT | Number of GPS pings received |
+| avg_speed_mph | FLOAT | Average speed |
+| late_arrival_flag | BOOLEAN | Delivered after estimated time? |
 
-## Data Quality Strategy
+**Grain:** One row per delivery trip.
+**Derived from:** Aggregation of raw GPS pings in Silver (grouped by delivery_id).
+**PDF Reference:** GPS Ping Table pattern (DM pages 119-120)
 
-Data quality issues are deliberately injected at the source to create realistic pipeline challenges:
+### DIMENSION TABLES
 
-| Issue | Rate | Where Injected | Where Resolved |
-|---|---|---|---|
-| Duplicate events | 5% (orders), 3% (sensors), 2% (GPS) | Generators (simulate network retries) | Silver (deduplicate by `order_id` / `reading_id`) |
-| Null emails | 2% | Order generator | Silver (flag as unresolvable for identity resolution) |
-| Late-arriving events | 3% orders, 10% GPS, 1% GPS very late | Generators (backdated timestamps) | Bronze handles via ingestion-time partitioning; Silver extracts correct event timestamps |
-| Null sensor values | 1% | Sensor generator | Silver (flag or impute based on business rules) |
-| Anomalous sensor readings | 0.5% | Sensor generator | Gold (anomaly detection and alerting) |
-| Schema misalignment | 100% (by design) | 3 platform schemas | Silver (schema alignment to unified format) |
+#### dim_customer (SCD2)
+| Column | Type | Description |
+|--------|------|-------------|
+| customer_key | BIGINT | Surrogate key (auto-increment, NEVER changes) |
+| customer_id | STRING | Best-known business ID |
+| name | STRING | Customer name |
+| email_masked | STRING | Hashed/masked email (not raw — for privacy) |
+| phone_masked | STRING | Hashed phone |
+| first_order_date | DATE | Date of first order across any platform |
+| platform_ids | JSON | {"uber_eats": "ue_cust_44821", "doordash": "dd_u_7721", "own_app": "app_john_123"} |
+| city | STRING | Most recent city |
+| is_multi_platform | BOOLEAN | Orders from 2+ platforms? (marketing gold) |
+| effective_start | TIMESTAMP | Version start |
+| effective_end | TIMESTAMP | Version end (null = current) |
+| is_current | BOOLEAN | Latest version |
 
-## Timestamps: Three Layers of Time
+**SCD Type 2:** New version when: email changes, new platform ID discovered, identity merge.
+**PII masking:** Raw email/phone only in Silver. Gold has masked versions. This practices GDPR/privacy.
+**PDF Reference:** Customer 360 (DM pages 101-111), Surrogate Keys (DM pages 15-16)
 
-Every event in the system has up to three timestamps, each capturing a different moment:
+#### dim_kitchen (SCD1)
+| Column | Type | Description |
+|--------|------|-------------|
+| kitchen_key | BIGINT | Surrogate key |
+| kitchen_id | STRING | Natural key (K-HOU-01) |
+| name | STRING | Kitchen display name |
+| city | STRING | City |
+| state | STRING | State |
+| lat | FLOAT | Latitude |
+| lon | FLOAT | Longitude |
+| capacity_orders_per_hour | INT | Max orders kitchen can handle |
+| opened_date | DATE | When kitchen opened |
 
-1. **Event timestamp** — when the event actually occurred (e.g., when the order was placed). Stored inside the raw JSON in Bronze. Extracted as a column in Silver. Used for all analytical queries.
+**SCD Type 1:** Overwrite. When capacity changes, we only care about current value. No history needed.
+**PDF Reference:** SCD Type 1 (DM page 17)
 
-2. **Kafka timestamp** — when Kafka's broker received the message. Typically milliseconds after event time. The gap between event and Kafka timestamps reveals source-side delays.
+#### dim_brand (SCD1)
+| Column | Type | Description |
+|--------|------|-------------|
+| brand_key | BIGINT | Surrogate key |
+| brand_id | STRING | Natural key |
+| brand_name | STRING | Display name (Burger Beast, Dragon Wok, etc.) |
+| cuisine_type | STRING | burgers/chinese/pizza/mexican/sushi/etc. |
+| launch_date | DATE | When brand was launched |
 
-3. **Ingestion timestamp** — when Spark processed and wrote the event to Delta Lake. The gap between Kafka and ingestion timestamps reveals pipeline processing lag.
+**SCD Type 1:** Brands rarely change. Overwrite if cuisine_type is corrected.
 
-Bronze partitions by ingestion timestamp (predictable, safe for late data). Silver makes event timestamp queryable. The difference between these timestamps is itself a useful metric for pipeline monitoring.
+#### dim_menu_item (SCD2)
+| Column | Type | Description |
+|--------|------|-------------|
+| menu_item_key | BIGINT | Surrogate key |
+| item_id | STRING | Natural key (BB-01) |
+| brand_key | BIGINT | FK → dim_brand |
+| name | STRING | Item name |
+| price_cents | INT | Current price in cents |
+| category | STRING | burgers/sides/drinks/mains |
+| is_active | BOOLEAN | Currently on menu? |
+| effective_start | TIMESTAMP | Version start |
+| effective_end | TIMESTAMP | Version end (null = current) |
+| is_current | BOOLEAN | Latest version |
+
+**SCD Type 2:** Price changes and active/inactive status changes create new versions.
+**Point-in-time join:** `fact_order.order_placed_ts BETWEEN dim_menu_item.effective_start AND dim_menu_item.effective_end`
+**PDF Reference:** SCD Type 2 (DM pages 17-18), CDC-driven updates (SD pages 39-42)
+
+#### dim_delivery_zone (SCD0)
+| Column | Type | Description |
+|--------|------|-------------|
+| zone_key | BIGINT | Surrogate key |
+| zone_id | STRING | Zone code (HOU-DOWNTOWN) |
+| zone_name | STRING | Display name |
+| city | STRING | City |
+| avg_delivery_radius_km | FLOAT | Typical delivery distance |
+
+**SCD Type 0:** Zones are defined once and NEVER changed. Even incorrect updates are rejected.
+**PDF Reference:** SCD Type 0 (DM page 17)
+
+#### dim_date
+| Column | Type | Description |
+|--------|------|-------------|
+| date_key | INT | YYYYMMDD format |
+| full_date | DATE | Actual date |
+| year | INT | Year |
+| month | INT | Month (1-12) |
+| day | INT | Day of month |
+| day_of_week | STRING | Monday, Tuesday, etc. |
+| is_weekend | BOOLEAN | Saturday or Sunday |
+| fiscal_quarter | STRING | Q1, Q2, Q3, Q4 |
+
+#### dim_time
+| Column | Type | Description |
+|--------|------|-------------|
+| time_key | INT | HHMM format |
+| hour | INT | 0-23 |
+| minute | INT | 0-59 |
+| period | STRING | breakfast/lunch/afternoon/dinner/late_night |
+
+**Business logic enrichment:** The `period` column maps hours to meal periods. This makes dashboard filters intuitive ("show me dinner orders" instead of "show me orders between 17:00-21:00").
+
+### BRIDGE TABLES
+
+#### bridge_kitchen_brand
+| Column | Type | Description |
+|--------|------|-------------|
+| kitchen_key | BIGINT | FK → dim_kitchen |
+| brand_key | BIGINT | FK → dim_brand |
+| is_active | BOOLEAN | Is this brand currently running at this kitchen? |
+| start_date | DATE | When brand started at this kitchen |
+| end_date | DATE | When brand stopped (null = still active) |
+
+**Purpose:** Many-to-many — one kitchen runs multiple brands, and one brand could run at multiple kitchens.
+**PDF Reference:** Bridge tables for M:M relationships (DM page 30)
+
+#### customer_identity_bridge
+| Column | Type | Description |
+|--------|------|-------------|
+| customer_key | BIGINT | FK → dim_customer (the unified surrogate key) |
+| platform | STRING | uber_eats / doordash / own_app |
+| platform_customer_id | STRING | Platform-specific ID (ue_cust_44821) |
+| email_hash | STRING | MD5 of normalized email (for matching) |
+| phone_hash | STRING | MD5 of phone (nullable) |
+| first_seen_date | DATE | When this ID first appeared |
+| last_seen_date | DATE | Most recent activity |
+| match_confidence | FLOAT | 1.0 = exact email match, 0.6-0.9 = fuzzy |
+| match_method | STRING | exact_email / fuzzy_name_address / manual_override |
+
+**Purpose:** Maps EVERY platform-specific customer ID to the unified customer_key.
+**Identity Resolution Algorithm:**
+1. Normalize emails (lowercase, trim spaces)
+2. Group all platform IDs by email_hash
+3. Assign one customer_key per email group
+4. For null emails: attempt fuzzy match on name + delivery address
+5. Store match_method and confidence for auditability
+**PDF Reference:** Identity Graph / Cross-System Mapping (DM pages 42-44, 101-111)
+
+---
+
+## GRANULARITY DECISIONS SUMMARY
+
+| Fact Table | Grain | Why This Grain |
+|------------|-------|----------------|
+| fact_order | 1 row per order (final state) | CEO needs: order count, revenue, delivery time |
+| fact_order_state_history | 1 row per order × status change | Operations needs: bottleneck analysis per state |
+| fact_sensor_hourly | 1 row per kitchen × sensor × zone × hour | Dashboard doesn't need per-second. Atomic in Silver for ML. |
+| fact_delivery_trip | 1 row per delivery | Derived from GPS pings. Pings too granular for dashboards. |
+
+**Dual-grain strategy everywhere:** Atomic events in Silver for correctness + pre-aggregated in Gold for performance. PDF calls this "exam gold" (DM page 37).
+
+---
+
+## DATA SOURCES → TABLE MAPPING
+
+| Source | Bronze Table | Silver Tables | Gold Tables |
+|--------|-------------|---------------|-------------|
+| Order Events (3 platforms) | bronze/orders/ | hub_customer, hub_order, link_order_customer, link_order_kitchen_brand, sat_order_details, sat_order_status, sat_customer_profile | fact_order, fact_order_state_history, dim_customer |
+| Kitchen Sensors | bronze/sensors/ | silver_sensor_readings (cleaned, deduped) | fact_sensor_hourly |
+| Menu CDC | bronze/menu_cdc/ | hub_menu_item, sat_menu_item_details | dim_menu_item |
+| Delivery GPS | bronze/gps/ | silver_gps_pings (deduped, validated) | fact_delivery_trip |
+| Customer Feedback | bronze/feedback/ | silver_feedback (rating normalized to 0-100) | Can be joined to fact_order |
+| Reference CSVs | Loaded directly to Gold | — | dim_kitchen, dim_brand, dim_delivery_zone, dim_date, dim_time |

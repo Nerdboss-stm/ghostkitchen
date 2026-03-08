@@ -1,115 +1,130 @@
-# GhostKitchen — Architecture Document
+# GhostKitchen — Architecture Reference
 
-## System Overview
+## Overview
+End-to-end data platform for dark kitchen operations. Ingests from 6 sources, processes through a Medallion lakehouse (Bronze/Silver/Gold), serves dashboards and APIs.
 
-GhostKitchen is a real-time data platform for dark kitchen (cloud kitchen) operations. It ingests order events from 3 food delivery platforms (Uber Eats, DoorDash, OwnApp), kitchen IoT sensor readings, delivery GPS pings, and menu changes — then builds a unified analytics layer with identity resolution across platforms.
+**Pattern:** Lambda Architecture (batch + streaming dual paths)
+**Modeling:** Data Vault (Silver) → Star Schema (Gold)
+**Cloud:** AWS Free Tier + Docker local development
+**Cost:** $0
 
-The core data engineering challenges this project addresses:
+## Architecture Pattern: Lambda
 
-- **Schema alignment**: Three delivery platforms send the same data (orders) with different field names and types. Uber uses `total_amount` (float), DoorDash uses `order_value` (float), OwnApp uses `amount_cents` (integer). The pipeline must normalize these into a single unified schema.
-- **Identity resolution**: The same customer may order through multiple platforms. Linking `customer_uid` (Uber), `dasher_customer_id` (DoorDash), and `user_id` (OwnApp) to a single person requires matching on shared fields like email — which is null 2% of the time.
-- **Late-arriving data**: 3% of orders and 10% of GPS pings arrive with timestamps minutes to hours in the past. The pipeline must handle these without corrupting existing data.
-- **Mixed-velocity ingestion**: Orders arrive at ~5/sec, sensors at ~15/sec, GPS at ~8/sec, and menu changes at ~3/min. Each source requires different handling.
+### Why Lambda?
+Orders have COMPLEX STATE MACHINES. An order goes through: placed → confirmed → preparing → ready → picked_up → delivered (or cancelled at any stage). Getting the EXACT revenue for a day requires knowing the final state of every order — which sometimes requires waiting for late events and corrections.
 
-## Architecture Pattern: Lambda Architecture
+**Streaming path (speed layer):** Spark Structured Streaming reads from Kafka, writes to Bronze/Silver/Gold with ~30-second latency. Gives dashboards FAST but APPROXIMATE numbers.
 
-GhostKitchen uses Lambda Architecture, which maintains two separate processing paths:
+**Batch path (truth layer):** Spark batch jobs run daily via Airflow. Reprocess last 48 hours from Bronze. Produce EXACT numbers. Overwrite the streaming approximations in Gold.
 
-- **Streaming path (speed layer)**: Processes events in near-real-time through Spark Structured Streaming. Serves real-time dashboards — kitchen managers can see active orders, sensor alerts, and delivery status updating every 30 seconds.
-- **Batch path (batch layer)**: Reprocesses complete historical data for accurate analytics. Serves finance, operations, and strategy teams who need exact numbers — total revenue per kitchen per month, average delivery times per zone, menu item profitability over time.
+**Reconciliation:** Daily batch results overwrite streaming Gold tables for the affected date range. This is why Delta Lake MERGE is essential — atomic overwrite without corrupting other dates.
 
-Both paths consume from the same Kafka topics and produce consistent results. The streaming path prioritizes speed (tolerate slight inaccuracies), while the batch path prioritizes correctness (handle all late arrivals, resolve all duplicates).
+### Why NOT Kappa?
+Kappa (single streaming path) works for append-only event data. But order state transitions involve CORRECTIONS: a delivered order might be refunded 2 hours later, changing the final state. Batch reprocessing handles these corrections more reliably than streaming upserts for complex state machines.
 
-**Why Lambda over Kappa?** Restaurant operations genuinely need both processing models. A kitchen manager watching a real-time dashboard cannot wait for a batch job. But the finance team preparing monthly reports needs exact numbers that account for every late-arriving order. Lambda serves both use cases from the same data.
+**Comparison with PulseTrack:** PulseTrack uses Kappa because wearable sensor readings are naturally append-only — a heart rate reading doesn't get "corrected" later. Different data characteristics → different architecture.
 
-## Infrastructure (Docker Services)
+**PDF Reference:** Lambda (SD pages 27-29), Kappa (SD pages 29-32), choosing between them (SD page 32)
 
-All infrastructure runs locally via Docker Compose at zero cost. The services are:
+## Data Flow
 
-**Apache Kafka (+ Zookeeper)**: The event streaming backbone. All data sources produce events to Kafka topics. Kafka provides three critical capabilities:
-1. *Decoupling* — generators and processors run independently
-2. *Buffering* — if Spark crashes, events wait in Kafka and nothing is lost
-3. *Replay* — the pipeline can re-read from the beginning to reprocess data
+```
+STREAMING PATH (speed layer — 30-second latency):
+┌──────────────────────────────────────────────────────────────────┐
+│ order_generator.py ──┐                                          │
+│ sensor_generator.py ─┤──→ Kafka ──→ Spark Structured ──→ Bronze │
+│ gps_generator.py ────┘              Streaming             Delta │
+│                                        │                        │
+│                                        └──→ Silver ──→ Gold     │
+│                                             (streaming           │
+│                                              MERGE)              │
+└──────────────────────────────────────────────────────────────────┘
 
-Topics: `orders_raw`, `kitchen_sensors`, `delivery_gps`, `menu_cdc`
+BATCH PATH (truth layer — daily):
+┌──────────────────────────────────────────────────────────────────┐
+│ menu_change_generator.py ──→ Kafka ──→ Bronze (via streaming)   │
+│ feedback CSV files ──→ Airflow file sensor ──→ Bronze           │
+│ reference CSVs ──→ Direct load to Gold                          │
+│                                                                  │
+│ Airflow (daily 4AM):                                            │
+│   Bronze ──→ Spark Batch ──→ Silver (Data Vault) ──→ Gold       │
+│                                  (dedup, SCD2,         (Star)   │
+│                                   identity resolution)           │
+└──────────────────────────────────────────────────────────────────┘
 
-**Apache Spark**: The processing engine. Runs Structured Streaming jobs that read from Kafka in micro-batches (every 30 seconds), transform data, and write to Delta Lake. Configured with a master and one worker node (2GB memory, 2 cores).
+SERVING:
+┌──────────────────────────────────────────────────────────────────┐
+│ Gold Delta Tables ──→ Metabase (dashboards)                     │
+│ Gold Delta Tables ──→ DynamoDB (real-time API lookups)          │
+│ Gold Delta Tables ──→ Superset / Redshift (ad-hoc SQL)         │
+└──────────────────────────────────────────────────────────────────┘
+```
 
-**MinIO**: Local S3-compatible object storage. Emulates AWS S3 for development. All Delta Lake tables are stored here at `s3a://ghostkitchen-lakehouse/`. In production, this would be replaced with actual AWS S3 — the only change required is the storage endpoint configuration in `spark_config.py`.
+## Component Details
 
-## Data Sources and Ingestion Patterns
+### Apache Kafka (Docker)
+- **Role:** Event streaming backbone
+- **Topics:** orders_raw (3 partitions), kitchen_sensors (3 partitions), delivery_gps (3 partitions), menu_cdc (1 partition)
+- **Partitioning strategy:** orders + sensors keyed by kitchen_id (all events from one kitchen in same partition for ordering). GPS keyed by driver_id. Menu CDC has 1 partition (low volume, must be ordered).
+- **Why Kafka over simple queues?** Decoupling, durability, replay capability, multiple consumers on same topic.
+- **PDF:** Event-Driven Architecture (SD pages 36-39), Partitioning (SD pages 48-49)
 
-| Source | Kafka Topic | Ingestion Pattern | Velocity | Kafka Key | Why This Key |
-|---|---|---|---|---|---|
-| Orders (3 platforms) | `orders_raw` | Streaming | ~5/sec | `kitchen_id` | Guarantees ordering per kitchen for order lifecycle tracking |
-| Kitchen Sensors | `kitchen_sensors` | Streaming | ~15/sec | `kitchen_id` | Groups all sensors from same kitchen for cross-sensor correlation |
-| Delivery GPS | `delivery_gps` | Streaming | ~8/sec | `driver_id` | Keeps each driver's GPS trail in order for route reconstruction |
-| Menu Changes | `menu_cdc` | CDC (Debezium) | ~3/min | None | Low volume, ordering not critical |
+### Apache Spark 3.5 (Docker)
+- **Role:** Both streaming and batch processing engine
+- **Streaming:** Spark Structured Streaming with 30-second micro-batch trigger. Reads from Kafka, writes to Delta Lake.
+- **Batch:** Spark batch jobs triggered by Airflow. Read from Bronze Delta, transform to Silver/Gold.
+- **Why Spark for both?** Unified API (same DataFrame code works in streaming and batch). Backfills use batch mode on the same transformation logic.
+- **Why NOT Flink?** Flink has better event-time processing and lower latency. But for this project: (1) 30-second latency is fine, (2) batch backfills are easier in Spark, (3) Delta Lake integration is more mature in Spark.
+- **PDF:** Batch vs Streaming (SD pages 17-18), Spark vs Flink (SD pages 124-127)
 
-**Kafka key choice matters**: The key determines which partition a message goes to. Same key = same partition = guaranteed ordering within that partition. For orders, keying by `kitchen_id` ensures that an order's lifecycle events (placed → confirmed → preparing → delivered) arrive in sequence.
+### Delta Lake on MinIO
+- **Role:** ACID lakehouse storage for all 3 layers
+- **Why Delta Lake?** MERGE operations for SCD2 updates, time travel for debugging, ACID guarantees prevent partial writes, schema evolution support.
+- **Why MinIO?** Local emulation of S3. Same API — code works unchanged on real AWS S3.
+- **Layers:**
+  - Bronze: `s3a://ghostkitchen-lakehouse/bronze/{source}/` — raw, append-only, partitioned by ingestion_date + ingestion_hour
+  - Silver: `s3a://ghostkitchen-lakehouse/silver/{table}/` — Data Vault tables
+  - Gold: `s3a://ghostkitchen-lakehouse/gold/{table}/` — Star Schema tables
+- **PDF:** Medallion (SD pages 32-35), Upsert Patterns (SD pages 43-47)
 
-**CDC format**: Menu changes use the Debezium envelope format with `op` (c/u/d), `before` state, and `after` state. This captures the full history of every change, enabling SCD Type 2 dimensions in the Silver layer.
+### Apache Airflow (Docker) — planned for Week 2+
+- **Role:** Orchestrate batch jobs, data quality checks, identity resolution
+- **DAGs planned:**
+  - dag_bronze_to_silver: Hourly batch transformation
+  - dag_silver_to_gold: Daily at 4AM
+  - dag_identity_resolution: Daily at 2AM
+  - dag_data_quality: After every transformation (quality gates)
+  - dag_reconciliation: Daily at 6AM (batch corrects streaming)
+  - dag_backfill: Parameterized (any date range)
+- **PDF:** Orchestration Patterns (SD pages 57-63)
 
-**Data quality issues are deliberately injected** at the generator level:
-- 5% duplicate orders (simulates at-least-once delivery / network retries)
-- 2% null customer emails (challenges identity resolution)
-- 3% late-arriving events (timestamps 1-24 hours in the past)
-- 1% null sensor values (sensor malfunction)
-- 0.5% anomalous sensor readings (equipment issues)
+### Great Expectations — planned for Week 2+
+- **Role:** Data quality framework
+- **Suites:** One per Silver and Gold table
+- **Integration:** Runs as Airflow tasks. Failed quality = pipeline blocked.
+- **PDF:** Data Quality (SD pages 14-15), Data Contracts (SD pages 52-57)
 
-These exist so the pipeline has realistic data quality challenges to solve.
+### Metabase (Docker) — planned for Week 5+
+- **Role:** BI dashboard for CEO and operations teams
+- **Connected to:** Gold Delta tables
+- **PDF:** Serving Layer (SD pages 13-14)
 
-## Medallion Architecture
+## Late-Arriving Data Strategy
+- Bronze: partitioned by ingestion_timestamp (not event_timestamp)
+- Streaming Silver: 24-hour watermark. Events within 24h = normal. Events > 24h = flagged.
+- Batch reconciliation: Nightly job reprocesses last 48 hours from Bronze → corrects Gold.
+- PDF: Late-Arriving Data (DM pages 62-64)
 
-Data flows through three layers, each with a specific purpose:
+## Monitoring Strategy (planned)
+- Kafka consumer lag (streaming falling behind?)
+- Spark job duration trends (performance regression?)
+- Gold table freshness (how stale is the dashboard data?)
+- Data quality pass rates (are tests failing?)
+- Row count anomaly detection (sudden drops = upstream issue)
 
-### Bronze Layer (Raw Ingestion)
-**Purpose**: Land raw data exactly as received. No parsing, no cleaning, no transformation.
-
-**What it stores**: The raw JSON event as a string (`raw_value`), plus metadata — which Kafka topic, partition, and offset the event came from, when Kafka received it (`kafka_timestamp`), and when Spark processed it (`ingestion_timestamp`).
-
-**Key design decisions**:
-- *Append-only*: Bronze never updates or deletes. Every event is a new row. This preserves the complete history as a safety net.
-- *Partitioned by ingestion time, not event time*: Late-arriving events (timestamps from hours or days ago) land in today's partition, not yesterday's. This prevents late data from scattering across old partitions and corrupting storage. The tradeoff is that analysts cannot query by event time at this layer — that's Silver's job.
-- *Date + hour partitioning*: Partitioning by full timestamp would create thousands of tiny folders (small file problem). Date + hour gives ~24 partitions per day — manageable and efficient for partition pruning.
-
-**Output**: Delta Lake tables at `s3a://ghostkitchen-lakehouse/bronze/orders/` and `bronze/sensors/`
-
-### Silver Layer (Cleaned + Normalized)
-**Purpose**: Parse the raw JSON, clean data quality issues, normalize schemas, and model the data.
-
-**What it does**:
-- Parse `raw_value` JSON string into typed columns (the bytes → string conversion happened in Bronze; Silver does string → structured columns)
-- Deduplicate events using `order_id` (or `reading_id` for sensors)
-- Align schemas across three platforms into a single unified format
-- Build SCD Type 2 dimensions from menu CDC events (tracking price history over time)
-- Extract `event_timestamp` as a proper column so analysts can query by when events actually happened
-
-**Modeling approach**: Data Vault. Hub tables for core business entities (orders, kitchens, customers, menu items), link tables for relationships, and satellite tables for descriptive attributes with full history.
-
-### Gold Layer (Business-Ready)
-**Purpose**: Optimized for specific analytical questions. Star Schema with fact and dimension tables.
-
-**Examples**:
-- `fact_orders` — one row per order with all metrics (total, item count, delivery time)
-- `dim_kitchen` — kitchen attributes (city, brands, capacity)
-- `dim_customer` — unified customer profile across all three platforms (identity resolution result)
-- `dim_menu_item` — current menu item attributes (from SCD2, point-in-time correct)
-- `fact_sensor_hourly` — pre-aggregated sensor readings rolled up to hourly averages
-
-## Cloud-Agnostic Design
-
-The pipeline is designed so that switching cloud providers requires changing only the storage configuration. Here is what changes and what stays the same:
-
-**Cloud-agnostic (no changes needed)**:
-- Apache Kafka — works identically on any cloud
-- Apache Spark — processing logic is identical
-- Delta Lake — format is cloud-independent
-- All generator code — produces the same events regardless of where they're stored
-- All transformation logic — same SQL/PySpark regardless of storage backend
-
-**Cloud-specific (configuration only)**:
-- Storage connector in `spark_config.py`: MinIO/S3 uses `fs.s3a.*` settings; Azure Blob uses `fs.azure.*` settings
-- Storage paths: `s3a://bucket/path` for AWS vs `wasbs://container@account.blob.core.windows.net/path` for Azure
-
-This is demonstrated by the companion project PulseTrack, which uses Azurite (Azure Blob emulator) instead of MinIO (S3 emulator). The Spark processing code is identical — only `spark_config.py` differs.
+## Cost Architecture
+- Everything runs locally on Docker ($0)
+- AWS Free Tier deployment: S3 (5GB), Lambda (1M req), DynamoDB (25GB), Glue Catalog
+- In production: 70% Spot instances for batch EMR, Serverless Redshift with auto-suspend
+- Hot/Warm/Cold tiering: Gold stays hot (7 days), Silver goes warm (90 days), Bronze goes cold (1+ year)
+- PDF: Cost Architecture (SD pages 64-88)
