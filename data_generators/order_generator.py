@@ -17,9 +17,14 @@ import json
 import time
 import random
 import uuid
+import os
+import sys
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
 from faker import Faker
+
+sys.path.insert(0, os.path.dirname(__file__))
+from reference_data import KITCHENS, CITY_ABBREV  # noqa: E402
 
 fake = Faker()
 
@@ -27,15 +32,6 @@ fake = Faker()
 KAFKA_BOOTSTRAP = "localhost:9092"
 TOPIC = "orders_raw"
 EVENTS_PER_SECOND = 5  # Start slow; increase later
-
-# ── REFERENCE DATA (will become dimensions later) ──
-KITCHENS = [
-    {"kitchen_id": "K-HOU-01", "city": "Houston", "brands": ["Burger Beast", "Dragon Wok", "Pizza Planet"]},
-    {"kitchen_id": "K-HOU-02", "city": "Houston", "brands": ["Taco Tornado", "Sushi Storm"]},
-    {"kitchen_id": "K-DAL-01", "city": "Dallas", "brands": ["Burger Beast", "Pasta Palace"]},
-    {"kitchen_id": "K-AUS-01", "city": "Austin", "brands": ["Dragon Wok", "BBQ Barn", "Salad Studio"]},
-    {"kitchen_id": "K-SAT-01", "city": "San Antonio", "brands": ["Taco Tornado", "Burger Beast"]},
-]
 
 MENU_ITEMS = {
     "Burger Beast": [
@@ -147,9 +143,9 @@ def generate_order_event():
             "currency": "USD",
             "order_status": "placed",
             "order_timestamp": now.isoformat() + "Z",
-            "delivery_zone": f"{kitchen['city'].upper()[:3]}-{zone}",
+            "delivery_zone": f"{CITY_ABBREV[kitchen['city']]}-{zone}",
         }
-    
+
     elif platform == "doordash":
         event = {
             "order_id": order_id,
@@ -162,9 +158,9 @@ def generate_order_event():
             "order_value": total,                        # DoorDash calls it 'order_value'
             "order_status": "placed",
             "created_at": now.isoformat() + "Z",         # DoorDash calls it 'created_at'!
-            "drop_off_zone": f"{kitchen['city'].upper()[:3]}-{zone}",
+            "drop_off_zone": f"{CITY_ABBREV[kitchen['city']]}-{zone}",
         }
-    
+
     else:  # own_app
         event = {
             "order_id": order_id,
@@ -177,7 +173,7 @@ def generate_order_event():
             "amount_cents": int(total * 100),            # OwnApp uses CENTS (integer)!
             "status": "placed",                          # OwnApp calls it just 'status'
             "timestamp": now.isoformat() + "Z",          # OwnApp calls it just 'timestamp'
-            "zone": f"{kitchen['city'].upper()[:3]}-{zone}",
+            "zone": f"{CITY_ABBREV[kitchen['city']]}-{zone}",
         }
     
     # ── INJECT DATA QUALITY ISSUES ──

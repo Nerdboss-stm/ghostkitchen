@@ -18,16 +18,15 @@ import json, time, random, uuid, math
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
 
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+from reference_data import GPS_DELIVERY_ZONES as DELIVERY_ZONES  # noqa: E402
+
 KAFKA_BOOTSTRAP = "localhost:9092"
 TOPIC = "delivery_gps"
 PINGS_PER_SECOND = 8
-
-DELIVERY_ZONES = {
-    "HOU-DOWNTOWN": {"center_lat": 29.7604, "center_lon": -95.3698},
-    "HOU-MIDTOWN": {"center_lat": 29.7440, "center_lon": -95.3866},
-    "DAL-DOWNTOWN": {"center_lat": 32.7767, "center_lon": -96.7970},
-    "AUS-DOWNTOWN": {"center_lat": 30.2672, "center_lon": -97.7431},
-}
+# DELIVERY_ZONES imported from reference_data: 50 zones across 10 cities
 
 # Simulate active deliveries
 active_deliveries = {}
