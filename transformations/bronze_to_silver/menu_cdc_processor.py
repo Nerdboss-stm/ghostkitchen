@@ -70,10 +70,10 @@ def load_sat_menu_item(cdc_df: DataFrame, spark: SparkSession):
     if updates.count() > 0:
         sat_table.alias("sat").merge(
             updates.alias("new"),
-            "sat.item_hash_key = new.item_hash_key AND sat.is_current = true"
+            "sat.menu_item_hk = new.item_hash_key AND sat.is_current = true"
         ).whenMatchedUpdate(set={
-            "effective_to": "new.load_timestamp",
-            "is_current":   "false"
+            "effective_end":  "new.load_timestamp",
+            "is_current":     "false"
         }).execute()
         to_sat_row(updates).write.format("delta").mode("append").save(sat_path)
         print(f"  sat_menu_item_details: {updates.count()} updates applied")
@@ -81,17 +81,17 @@ def load_sat_menu_item(cdc_df: DataFrame, spark: SparkSession):
     if deletes.count() > 0:
         sat_table.alias("sat").merge(
             deletes.alias("del"),
-            "sat.item_hash_key = del.item_hash_key AND sat.is_current = true"
+            "sat.menu_item_hk = del.item_hash_key AND sat.is_current = true"
         ).whenMatchedUpdate(set={
-            "effective_to": "del.load_timestamp",
+            "effective_end": "del.load_timestamp",
             "is_current":   "false"
-        }).execute()
+        }).execute()        
         print(f"  sat_menu_item_details: {deletes.count()} deletes applied")
 
     if creates.count() > 0:
         sat_table.alias("sat").merge(
             to_sat_row(creates).alias("new"),
-            "sat.item_hash_key = new.item_hash_key"
+            "sat.menu_item_hk = new.menu_item_hk"
         ).whenNotMatchedInsertAll().execute()
         print(f"  sat_menu_item_details: {creates.count()} creates applied")
 
