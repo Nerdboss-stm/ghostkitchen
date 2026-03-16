@@ -20,11 +20,13 @@ def assign_dim_customer() -> DataFrame:
     )
 
     dim_customer_df = joined_df.join(hub_cus_df, "customer_hk", "left")
-    dim_customer_df = dim_customer_df.withColumn("customer_bk",F.concat(
-        F.substring(F.split(F.col("customer_bk"), "@")[0], 1, 2),
-        F.lit("***@"),
-        F.split(F.col("customer_bk"), "@")[1]
-    ))
+    dim_customer_df = dim_customer_df.withColumn("customer_bk",
+    F.when(F.col("customer_bk").isNull(), F.lit("unknown"))
+     .otherwise(F.concat(
+         F.substring(F.split(F.col("customer_bk"), "@")[0], 1, 2),
+         F.lit("***@"),
+         F.split(F.col("customer_bk"), "@")[1]
+     )))
     dim_customer_df = dim_customer_df.withColumn("is_active", F.lit(True))
 
     return dim_customer_df
