@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-def assign_dim_kitchen() -> DataFrame:
+def assign_dim_kitchen(spark: SparkSession) -> DataFrame:
     seed_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'seed', 'kitchens.csv')
 
     df = spark.read.csv(seed_path, header=True, inferSchema=True)
@@ -15,10 +15,11 @@ def assign_dim_kitchen() -> DataFrame:
     return df
 
 def run_dim_kitchen(spark: SparkSession):
-    df=assign_dim_kitchen()
+    df=assign_dim_kitchen(spark)
     df.write \
         .format("delta") \
         .mode("overwrite") \
+        .option("overwriteSchema", "true") \
         .save("s3a://ghostkitchen-lakehouse/gold/dim_kitchen/")
 
     print(f"✅ Dimension Kitchen rows written: {df.count()} rows")

@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-def assign_dim_time() -> DataFrame:
+def assign_dim_time(spark: SparkSession) -> DataFrame:
 
     dim_time_df = spark.sql("SELECT sequence(TIMESTAMP '2024-01-01 00:00:00', TIMESTAMP '2024-01-01 23:59:00', INTERVAL 1 MINUTE) as times") \
                 .selectExpr("explode(times) as full_time")
@@ -27,10 +27,11 @@ def assign_dim_time() -> DataFrame:
     return dim_time_df
 
 def run_dim_time(spark: SparkSession):
-    df=assign_dim_time()
+    df=assign_dim_time(spark)
     df.write \
         .format("delta") \
         .mode("overwrite") \
+        .option("overwriteSchema", "true") \
         .save("s3a://ghostkitchen-lakehouse/gold/dim_time/")
 
     print(f"✅ Dimension Time rows written: {df.count()} rows")

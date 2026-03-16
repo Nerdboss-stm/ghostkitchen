@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-def assign_dim_customer() -> DataFrame:
+def assign_dim_customer(spark: SparkSession) -> DataFrame:
 
     SILVER_BASE = "s3a://ghostkitchen-lakehouse/silver"
 
@@ -32,10 +32,11 @@ def assign_dim_customer() -> DataFrame:
     return dim_customer_df
 
 def run_dim_customer(spark: SparkSession):
-    df=assign_dim_customer()
+    df=assign_dim_customer(spark)
     df.write \
         .format("delta") \
         .mode("overwrite") \
+        .option("overwriteSchema", "true") \
         .save("s3a://ghostkitchen-lakehouse/gold/dim_customer/")
 
     print(f"✅ Dimension Customer rows written: {df.count()} rows")
@@ -45,3 +46,4 @@ if __name__ == "__main__":
     from ingestion.spark_config import get_spark_session
     spark = get_spark_session("Dimension Customer")
     run_dim_customer(spark)
+    

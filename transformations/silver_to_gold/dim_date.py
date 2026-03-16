@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-def assign_dim_date() -> DataFrame:
+def assign_dim_date(spark: SparkSession) -> DataFrame:
     start = date(2024, 1, 1)
     end   = date(2026, 12, 31)
 
@@ -27,10 +27,11 @@ def assign_dim_date() -> DataFrame:
     return dim_date_df
 
 def run_dim_date(spark: SparkSession):
-    df=assign_dim_date()
+    df=assign_dim_date(spark)
     df.write \
         .format("delta") \
         .mode("overwrite") \
+        .option("overwriteSchema", "true") \
         .save("s3a://ghostkitchen-lakehouse/gold/dim_date/")
 
     print(f"✅ Dimension Date rows written: {df.count()} rows")
