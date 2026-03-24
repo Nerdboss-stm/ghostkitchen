@@ -1,0 +1,117 @@
+name: GhostKitchen CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  # ── Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint dependencies
+        run: pip install flake8 flake8-bugbear
+
+      - name: Run flake8
+        run: |
+          flake8 . \
+            --exclude=venv,.git,__pycache__,.claude \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503,E501
+
+  # ── Unit tests ────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests (pytest — no Spark)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install pytest faker kafka-python
+
+      - name: Run unit tests (generators only — no Spark or Delta needed)
+        run: |
+          pytest tests/test_order_generator.py tests/test_sensor_generator.py \
+            -v --tb=short
+
+  # ── Integration tests (Spark + Delta + MinIO) ─────────────────────────────
+  integration-tests:
+    name: Integration Tests (Spark + Delta Lake)
+    runs-on: ubuntu-latest
+    # Only run on merge to main to save CI minutes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    services:
+      minio:
+        image: minio/minio:latest
+        ports:
+          - "9000:9000"
+          - "9001:9001"
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        # minio needs a command; handled via entrypoint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Java 11 (required by Spark)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create MinIO bucket
+        run: |
+          pip install minio
+          python - <<'EOF'
+          from minio import Minio
+          client = Minio("localhost:9000", access_key="minioadmin",
+                         secret_key="minioadmin", secure=False)
+          if not client.bucket_exists("ghostkitchen-lakehouse"):
+              client.make_bucket("ghostkitchen-lakehouse")
+          print("Bucket ready.")
+          EOF
+
+      - name: Run Gold dimension unit tests
+        run: |
+          pytest tests/test_gold_dimensions.py -v --tb=short
+        env:
+          PYTHONPATH: .
+
+      - name: Run Gold fact unit tests
+        run: |
+          pytest tests/test_gold_facts.py -v --tb=short
+        env:
+          PYTHONPATH: .
