@@ -208,9 +208,59 @@ def generate_order_event():
     return event, is_duplicate
 
 
+def generate_status_events(base_event, platform):
+    """Given a placed order event, generate subsequent status-change events.
+
+    Each returned event has a uniform schema so that fact_order_state_history
+    can parse them regardless of the originating platform:
+        order_id, platform, kitchen_id, status, status_timestamp, event_type
+    """
+    order_id  = base_event.get("order_id")
+    kitchen_id = base_event.get("kitchen_id") or base_event.get("store_id")
+
+    # Parse the placed timestamp from the platform-specific field
+    ts_str = (
+        base_event.get("order_timestamp")
+        or base_event.get("created_at")
+        or base_event.get("timestamp")
+    )
+    ts = datetime.fromisoformat(ts_str.rstrip("Z"))
+
+    statuses = ["confirmed", "preparing", "ready", "picked_up", "delivered"]
+    is_cancelled = random.random() < 0.05
+
+    events = []
+    for status in statuses:
+        ts = ts + timedelta(minutes=random.randint(2, 15))
+        status_event = {
+            "order_id": order_id,
+            "platform": platform,
+            "kitchen_id": kitchen_id,
+            "status": status,
+            "status_timestamp": ts.isoformat() + "Z",
+            "event_type": "status_change",
+        }
+        events.append(status_event)
+
+        if is_cancelled and status == "confirmed":
+            cancel_ts = ts + timedelta(minutes=random.randint(1, 5))
+            cancelled_event = {
+                "order_id": order_id,
+                "platform": platform,
+                "kitchen_id": kitchen_id,
+                "status": "cancelled",
+                "status_timestamp": cancel_ts.isoformat() + "Z",
+                "event_type": "status_change",
+            }
+            events.append(cancelled_event)
+            break
+
+    return events
+
+
 def main():
     """Main loop: continuously generate and send order events to Kafka."""
-    
+
     print("=" * 60)
     print("🍔 GhostKitchen Order Generator Starting...")
     print(f"   Kafka: {KAFKA_BOOTSTRAP}")
@@ -220,42 +270,49 @@ def main():
     print(f"   Kitchens: {len(KITCHENS)}")
     print(f"   Customers: {len(CUSTOMERS)} (shared across platforms)")
     print("=" * 60)
-    
+
     # Connect to Kafka
     producer = KafkaProducer(
         bootstrap_servers=KAFKA_BOOTSTRAP,
         value_serializer=lambda v: json.dumps(v).encode('utf-8'),
         key_serializer=lambda k: k.encode('utf-8') if k else None,
     )
-    
+
     event_count = 0
     dup_count = 0
-    
+
     try:
         while True:
             event, is_duplicate = generate_order_event()
-            
+
             # Use kitchen_id as the Kafka key — ensures all orders for the same
             # kitchen land on the same partition (important for ordering!)
             key = event.get("kitchen_id") or event.get("store_id")
-            
+
             producer.send(TOPIC, key=key, value=event)
             event_count += 1
-            
+
             # Send duplicate if flagged
             if is_duplicate:
                 producer.send(TOPIC, key=key, value=event)
                 event_count += 1
                 dup_count += 1
-            
+
+            # Emit full order lifecycle: confirmed → preparing → ready → picked_up → delivered
+            # (~5% cancel after confirmed — handled inside generate_status_events)
+            platform = event.get("platform", "")
+            for status_event in generate_status_events(event, platform):
+                producer.send(TOPIC, key=key, value=status_event)
+                event_count += 1
+
             # Progress logging
             if event_count % 50 == 0:
                 print(f"  📤 Sent {event_count} events ({dup_count} duplicates) | "
                       f"Last: {event['platform']} → {event.get('brand_name') or event.get('store_name') or event.get('brand')}")
-            
+
             # Rate limiting
             time.sleep(1.0 / EVENTS_PER_SECOND)
-    
+
     except KeyboardInterrupt:
         print(f"\n🛑 Stopped. Total events sent: {event_count} ({dup_count} duplicates)")
         producer.close()
