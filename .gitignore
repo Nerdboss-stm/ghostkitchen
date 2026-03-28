@@ -15,6 +15,7 @@ _delta_log/
 
 # Docker volumes
 data/
+!data/seed/
 logs/
 
 # IDE
