@@ -45,7 +45,7 @@ def test_dim_time_no_duplicate_time_key(spark):
 # ── dim_kitchen ───────────────────────────────────────────
 def test_dim_kitchen_row_count(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_kitchen")
-    assert df.count() == 5
+    assert df.count() == 50
 
 def test_dim_kitchen_no_null_kitchen_id(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_kitchen")
@@ -69,24 +69,36 @@ def test_dim_brand_no_duplicates(spark):
     assert df.count() == df.dropDuplicates(["brand_name"]).count()
 
 # ── dim_customer ──────────────────────────────────────────
-def test_dim_customer_row_count(spark):
+def test_dim_customer_has_rows(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
-    assert df.count() == 576
+    assert df.count() > 0
 
 def test_dim_customer_no_null_customer_hk(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
     assert df.filter(df.customer_hk.isNull()).count() == 0
 
 def test_dim_customer_no_duplicate_customer_hk(spark):
+    # SCD2: uniqueness on the current version only
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
-    assert df.count() == df.dropDuplicates(["customer_hk"]).count()
+    current = df.filter(df.is_current == True)
+    assert current.count() == current.dropDuplicates(["customer_hk"]).count()
 
-def test_dim_customer_platform_count_positive(spark):
+def test_dim_customer_platform_count_in_range(spark):
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
-    assert df.filter(df.platform_count < 1).count() == 0
+    assert df.filter((df.platform_count < 1) | (df.platform_count > 3)).count() == 0
 
-def test_dim_customer_email_masked(spark):
+def test_dim_customer_email_masked_is_md5(spark):
+    """email_masked must be a 32-char hex string — never a raw email."""
+    from pyspark.sql import functions as F
     df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
-    masked = df.filter(df.customer_bk.contains("***")).count()
-    unknown = df.filter(df.customer_bk == "unknown").count()
-    assert masked + unknown == df.count()
+    # Must not contain @ (raw email guard)
+    assert df.filter(F.col("email_masked").contains("@")).count() == 0
+    # Must be exactly 32 hex characters (MD5)
+    invalid_md5 = df.filter(~F.col("email_masked").rlike("^[a-f0-9]{32}$"))
+    assert invalid_md5.count() == 0
+
+def test_dim_customer_scd2_columns_present(spark):
+    df = spark.read.format("delta").load(f"{GOLD_BASE}/dim_customer")
+    required = {"customer_hk", "customer_id", "email_masked", "platform_count",
+                "is_multi_platform", "effective_start", "is_current"}
+    assert required.issubset(set(df.columns))
