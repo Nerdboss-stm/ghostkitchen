@@ -1,0 +1,51 @@
+{
+  "expectation_suite_name": "dim_customer",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "SCD2 customer dimension. PII check: email must be hashed in Gold."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {"column": "customer_hk"},
+      "meta": {"notes": "One current row per customer."}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "customer_hk"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "email_masked"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_match_regex",
+      "kwargs": {
+        "column": "email_masked",
+        "regex": "@"
+      },
+      "meta": {
+        "notes": "CRITICAL: email_masked must NOT contain @ — proves it is MD5 hashed, not raw email. Raw email is PII and must never appear in Gold."
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "platform_count",
+        "min_value": 1,
+        "max_value": 3
+      },
+      "meta": {"notes": "There are only 3 platforms (uber_eats, doordash, own_app)."}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "is_current",
+        "value_set": [true, false]
+      },
+      "meta": {}
+    }
+  ]
+}

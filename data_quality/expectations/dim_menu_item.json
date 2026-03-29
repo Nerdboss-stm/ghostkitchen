@@ -1,0 +1,41 @@
+{
+  "expectation_suite_name": "dim_menu_item",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "SCD2 menu item dimension. One current row per item_id."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {"column": "menu_item_key"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "item_id"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "price",
+        "min_value": 0.99,
+        "max_value": 50.0
+      },
+      "meta": {"notes": "Menu items: $0.99 min (sides), $50 max (platters). price column is dollars (price_cents / 100)."}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "is_current",
+        "value_set": [true, false]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "valid_from"},
+      "meta": {"notes": "SCD2 effective_start must always be populated."}
+    }
+  ]
+}
