@@ -30,12 +30,18 @@ from datetime import datetime, timedelta
 from kafka import KafkaProducer
 
 # ── CONFIGURATION ─────────────────────────────────
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+from reference_data import KITCHENS as _KITCHEN_DICTS  # noqa: E402
+
 KAFKA_BOOTSTRAP = "localhost:9092"
 TOPIC = "kitchen_sensors"
 EVENTS_PER_SECOND = 15  # Higher velocity than orders — IoT is chatty!
 
 # ── KITCHENS AND THEIR SENSORS ────────────────────
-KITCHENS = ["K-HOU-01", "K-HOU-02", "K-DAL-01", "K-AUS-01", "K-SAT-01"]
+# All 50 kitchen IDs sourced from reference_data (single source of truth)
+KITCHENS = [k["kitchen_id"] for k in _KITCHEN_DICTS]
 
 # Each kitchen has these sensor zones
 SENSOR_CONFIGS = [
