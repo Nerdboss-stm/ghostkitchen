@@ -24,11 +24,7 @@ jobs:
         run: pip install flake8 flake8-bugbear
 
       - name: Run flake8
-        run: |
-          flake8 . \
-            --exclude=venv,.git,__pycache__,.claude \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503,E501
+        run: flake8 .
 
   # ── Unit tests ────────────────────────────────────────────────────────────
   unit-tests:
@@ -83,11 +79,11 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Set up Java 11 (required by Spark)
+      - name: Set up Java 17 (required by PySpark 4.x)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: "17"
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
