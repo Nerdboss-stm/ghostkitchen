@@ -51,8 +51,8 @@ def get_spark_session(app_name="GhostKitchen"):
     spark = configure_spark_with_delta_pip(
         builder,
         extra_packages=[
-            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3",
-            "org.apache.hadoop:hadoop-aws:3.3.4",
+            "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.1",
+            "org.apache.hadoop:hadoop-aws:3.4.1",
             "com.amazonaws:aws-java-sdk-bundle:1.12.262",
         ]
     ).getOrCreate()
