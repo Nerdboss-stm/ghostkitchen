@@ -75,7 +75,7 @@ MENU_ITEMS = {
 
 # Simulate 200 customers (some will appear on multiple platforms → identity resolution!)
 CUSTOMERS = []
-for i in range(200):
+for _ in range(200):
     email = fake.email()
     CUSTOMERS.append({
         "email": email,
