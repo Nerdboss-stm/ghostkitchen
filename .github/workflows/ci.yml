@@ -55,21 +55,6 @@ jobs:
     # Only run on merge to main to save CI minutes
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-    services:
-      minio:
-        image: minio/minio:latest
-        ports:
-          - "9000:9000"
-          - "9001:9001"
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        # minio needs a command; handled via entrypoint
     steps:
       - uses: actions/checkout@v4
 
@@ -84,6 +69,23 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Start MinIO
+        # The minio image requires a startup command ("server /data") which
+        # GitHub Actions service containers do not support.  Run it via
+        # docker run so we can pass the command explicitly.
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data --console-address ":9001"
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:9000/minio/health/live && echo "MinIO ready" && break
+            echo "Waiting for MinIO... ($i/15)"; sleep 2
+          done
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt

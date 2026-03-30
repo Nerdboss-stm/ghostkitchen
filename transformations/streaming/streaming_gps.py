@@ -42,9 +42,9 @@ GOLD_DELIVERIES_PATH  = "s3a://ghostkitchen-lakehouse/gold/streaming/active_deli
 CHECKPOINT_BASE = "s3a://ghostkitchen-lakehouse/checkpoints/streaming_gps"
 
 # Texas bounding box (same as batch gps_silver.py)
-_LAT_MIN, _LAT_MAX =  25.8,   36.5
+_LAT_MIN, _LAT_MAX = 25.8, 36.5
 _LON_MIN, _LON_MAX = -106.7, -93.5
-_SPEED_ANOMALY_MPH  = 120.0
+_SPEED_ANOMALY_MPH = 120.0
 _LATE_PING_SECONDS  = 60
 _SLA_MINUTES        = 45.0
 
