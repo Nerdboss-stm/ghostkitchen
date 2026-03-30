@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.window import Window
 from pyspark.sql.types import TimestampType, LongType, BooleanType
 from delta.tables import DeltaTable
 
@@ -53,12 +54,22 @@ def to_sat_row(df: DataFrame) -> DataFrame:
     )
 
 
+def _dedup_latest(df: DataFrame) -> DataFrame:
+    """Keep only the latest event per item_hash_key within a batch."""
+    w = Window.partitionBy("item_hash_key").orderBy(F.col("ts_ms").desc())
+    return (
+        df.withColumn("_rn", F.row_number().over(w))
+          .filter(F.col("_rn") == 1)
+          .drop("_rn")
+    )
+
+
 def load_sat_menu_item(cdc_df: DataFrame, spark: SparkSession):
     sat_path = f"{SILVER_BASE}/vault/sat_menu_item_details"
 
-    creates = cdc_df.filter(F.col("op") == "c")
-    updates  = cdc_df.filter(F.col("op") == "u")
-    deletes  = cdc_df.filter(F.col("op") == "d")
+    creates = _dedup_latest(cdc_df.filter(F.col("op") == "c"))
+    updates  = _dedup_latest(cdc_df.filter(F.col("op") == "u"))
+    deletes  = _dedup_latest(cdc_df.filter(F.col("op") == "d"))
 
     if not DeltaTable.isDeltaTable(spark, sat_path):
         to_sat_row(creates).write.format("delta").save(sat_path)

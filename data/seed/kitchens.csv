@@ -1,0 +1,51 @@
+kitchen_id,name,city,state,lat,lon,capacity_orders_per_hour,opened_date,is_active
+K-HOU-01,GhostKitchen Houston Central,Houston,Texas,29.7604,-95.3698,15,2022-03-01,TRUE
+K-HOU-02,GhostKitchen Houston Heights,Houston,Texas,29.7979,-95.3970,12,2022-07-15,TRUE
+K-HOU-03,GhostKitchen Houston Galleria,Houston,Texas,29.7369,-95.4613,18,2023-01-20,TRUE
+K-HOU-04,GhostKitchen Houston Midtown,Houston,Texas,29.7390,-95.3840,14,2023-04-01,TRUE
+K-HOU-05,GhostKitchen Houston Katy,Houston,Texas,29.7858,-95.8245,10,2023-09-01,TRUE
+K-DAL-01,GhostKitchen Dallas Uptown,Dallas,Texas,32.7935,-96.8026,15,2022-05-01,TRUE
+K-DAL-02,GhostKitchen Dallas Deep Ellum,Dallas,Texas,32.7838,-96.7854,12,2022-11-01,TRUE
+K-DAL-03,GhostKitchen Dallas North,Dallas,Texas,32.8700,-96.7700,16,2023-02-14,TRUE
+K-DAL-04,GhostKitchen Dallas Oak Lawn,Dallas,Texas,32.8093,-96.8172,13,2023-06-01,TRUE
+K-DAL-05,GhostKitchen Dallas Frisco,Dallas,Texas,33.1507,-96.8236,14,2023-10-01,TRUE
+K-AUS-01,GhostKitchen Austin Downtown,Austin,Texas,30.2672,-97.7431,18,2021-11-01,TRUE
+K-AUS-02,GhostKitchen Austin East Side,Austin,Texas,30.2584,-97.7198,15,2022-04-01,TRUE
+K-AUS-03,GhostKitchen Austin South Congress,Austin,Texas,30.2270,-97.7524,12,2022-09-01,TRUE
+K-AUS-04,GhostKitchen Austin North Loop,Austin,Texas,30.3500,-97.7200,16,2023-03-01,TRUE
+K-AUS-05,GhostKitchen Austin Buda,Austin,Texas,30.0850,-97.8400,10,2023-08-01,TRUE
+K-SAT-01,GhostKitchen San Antonio Downtown,San Antonio,Texas,29.4241,-98.4936,10,2023-01-10,TRUE
+K-SAT-02,GhostKitchen San Antonio Alamo,San Antonio,Texas,29.4258,-98.4861,12,2023-03-01,TRUE
+K-SAT-03,GhostKitchen San Antonio Pearl,San Antonio,Texas,29.4489,-98.4802,14,2023-05-15,TRUE
+K-SAT-04,GhostKitchen San Antonio Medical,San Antonio,Texas,29.5014,-98.5800,11,2023-07-01,TRUE
+K-SAT-05,GhostKitchen San Antonio Stone Oak,San Antonio,Texas,29.6116,-98.4814,13,2024-01-15,TRUE
+K-FTW-01,GhostKitchen Fort Worth Sundance,Fort Worth,Texas,32.7555,-97.3308,15,2022-06-01,TRUE
+K-FTW-02,GhostKitchen Fort Worth Cultural District,Fort Worth,Texas,32.7469,-97.3354,12,2022-10-01,TRUE
+K-FTW-03,GhostKitchen Fort Worth TCU,Fort Worth,Texas,32.7096,-97.3625,14,2023-02-01,TRUE
+K-FTW-04,GhostKitchen Fort Worth Alliance,Fort Worth,Texas,32.9823,-97.3163,11,2023-05-01,TRUE
+K-FTW-05,GhostKitchen Fort Worth Hurst,Fort Worth,Texas,32.8235,-97.1881,10,2023-11-01,TRUE
+K-ELP-01,GhostKitchen El Paso Downtown,El Paso,Texas,31.7619,-106.4850,12,2022-08-01,TRUE
+K-ELP-02,GhostKitchen El Paso UTEP,El Paso,Texas,31.7677,-106.5014,10,2022-12-01,TRUE
+K-ELP-03,GhostKitchen El Paso Westside,El Paso,Texas,31.8357,-106.5573,13,2023-03-01,TRUE
+K-ELP-04,GhostKitchen El Paso Northeast,El Paso,Texas,31.8701,-106.3849,11,2023-06-15,TRUE
+K-ELP-05,GhostKitchen El Paso Eastside,El Paso,Texas,31.7782,-106.3950,10,2023-10-01,TRUE
+K-ARL-01,GhostKitchen Arlington Center,Arlington,Texas,32.7357,-97.1081,14,2022-07-01,TRUE
+K-ARL-02,GhostKitchen Arlington Stadium,Arlington,Texas,32.7473,-97.0945,12,2022-11-15,TRUE
+K-ARL-03,GhostKitchen Arlington UTA,Arlington,Texas,32.7294,-97.1143,11,2023-01-01,TRUE
+K-ARL-04,GhostKitchen Arlington Six Flags,Arlington,Texas,32.7572,-97.0697,13,2023-04-01,TRUE
+K-ARL-05,GhostKitchen Arlington South,Arlington,Texas,32.6963,-97.0983,10,2023-09-15,TRUE
+K-CRP-01,GhostKitchen Corpus Christi Bayfront,Corpus Christi,Texas,27.8006,-97.3964,12,2022-09-01,TRUE
+K-CRP-02,GhostKitchen Corpus Christi South,Corpus Christi,Texas,27.7575,-97.4072,10,2023-01-01,TRUE
+K-CRP-03,GhostKitchen Corpus Christi North,Corpus Christi,Texas,27.8402,-97.4143,11,2023-04-01,TRUE
+K-CRP-04,GhostKitchen Corpus Christi Flour Bluff,Corpus Christi,Texas,27.6985,-97.3601,10,2023-07-01,TRUE
+K-CRP-05,GhostKitchen Corpus Christi Portland,Corpus Christi,Texas,27.8878,-97.3239,9,2023-11-01,TRUE
+K-PLN-01,GhostKitchen Plano Legacy,Plano,Texas,33.0198,-96.6989,16,2022-04-01,TRUE
+K-PLN-02,GhostKitchen Plano Downtown,Plano,Texas,33.0198,-96.7500,14,2022-08-01,TRUE
+K-PLN-03,GhostKitchen Plano Collin Creek,Plano,Texas,33.0300,-96.7500,13,2023-01-15,TRUE
+K-PLN-04,GhostKitchen Plano East,Plano,Texas,33.0400,-96.6200,12,2023-05-01,TRUE
+K-PLN-05,GhostKitchen Plano Allen,Plano,Texas,33.1032,-96.6706,15,2023-09-01,TRUE
+K-LBB-01,GhostKitchen Lubbock Texas Tech,Lubbock,Texas,33.5843,-101.8746,12,2022-10-01,TRUE
+K-LBB-02,GhostKitchen Lubbock Downtown,Lubbock,Texas,33.5779,-101.8552,10,2023-01-01,TRUE
+K-LBB-03,GhostKitchen Lubbock South,Lubbock,Texas,33.5279,-101.8500,11,2023-04-01,TRUE
+K-LBB-04,GhostKitchen Lubbock North,Lubbock,Texas,33.6400,-101.8400,10,2023-07-01,TRUE
+K-LBB-05,GhostKitchen Lubbock Wolfforth,Lubbock,Texas,33.5057,-101.9980,9,2023-11-01,TRUE

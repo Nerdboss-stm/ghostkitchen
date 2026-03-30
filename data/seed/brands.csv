@@ -1,0 +1,9 @@
+brand_id,brand_name,cuisine_type,launch_date,is_active
+BB,Burger Beast,American,2020-06-01,TRUE
+DW,Dragon Wok,Chinese,2020-08-15,TRUE
+PP,Pizza Planet,Italian,2021-01-10,TRUE
+TT,Taco Tornado,Mexican,2021-03-01,TRUE
+SS,Sushi Storm,Japanese,2021-07-20,TRUE
+PA,Pasta Palace,Italian,2022-01-15,TRUE
+BQ,BBQ Barn,American,2022-04-10,TRUE
+SL,Salad Studio,American,2022-09-01,TRUE
