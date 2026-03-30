@@ -46,6 +46,52 @@ def validate(df: DataFrame) -> DataFrame:
          .otherwise(False))
     return df
 
+def write_sensor_alerts(silver_sensor_df: DataFrame, spark: SparkSession):
+    """Extracts anomalous readings into a dedicated silver/sensor_alerts table."""
+    alerts_path = f"{SILVER_BASE}/sensor_alerts"
+
+    alert_type_col = (
+        F.when(F.col("sensor_type") == "temperature", F.lit("TEMPERATURE_SPIKE"))
+         .when(F.col("sensor_type") == "humidity",    F.lit("HIGH_HUMIDITY"))
+         .when(F.col("sensor_type") == "fryer_timer", F.lit("FRYER_OVERRUN"))
+         .otherwise(F.lit("SENSOR_ANOMALY"))
+    )
+
+    severity_col = (
+        F.when(F.col("sensor_type") == "temperature",
+               F.when(F.col("value") > 500, F.lit("CRITICAL")).otherwise(F.lit("HIGH")))
+         .when(F.col("sensor_type") == "humidity",
+               F.when(F.col("value") > 85,  F.lit("CRITICAL")).otherwise(F.lit("HIGH")))
+         .when(F.col("sensor_type") == "fryer_timer",
+               F.when(F.col("value") > 900, F.lit("CRITICAL")).otherwise(F.lit("HIGH")))
+         .otherwise(F.lit("MEDIUM"))
+    )
+
+    alerts_df = silver_sensor_df.filter(F.col("is_anomaly") == True).select(
+        F.col("reading_id").alias("alert_id"),
+        F.col("kitchen_id"),
+        F.col("sensor_id"),
+        F.col("sensor_type"),
+        F.col("zone"),
+        F.col("value"),
+        F.col("unit"),
+        F.col("event_timestamp"),
+        F.col("ingestion_timestamp").alias("detected_at"),
+        alert_type_col.alias("alert_type"),
+        severity_col.alias("severity"),
+        F.lit("OPEN").alias("alert_status"),
+    )
+
+    alerts_df.write \
+        .format("delta") \
+        .mode("overwrite") \
+        .option("overwriteSchema", "true") \
+        .save(alerts_path)
+
+    print(f"  sensor_alerts written: {alerts_df.count()} alerts "
+          f"(CRITICAL + HIGH severity)")
+
+
 def run_silver_sensors(spark: SparkSession):
     df = parse_bronze(spark)
     df = deduplicate(df)
@@ -58,6 +104,7 @@ def run_silver_sensors(spark: SparkSession):
         .save(f"{SILVER_BASE}/sensors")
 
     print(f"✅ Silver sensor readings written: {silver_sensor_df.count()} rows")
+    write_sensor_alerts(silver_sensor_df, spark)
 
 
 if __name__ == "__main__":

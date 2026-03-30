@@ -178,3 +178,108 @@ GROUP BY
     dc.first_order_date
 ORDER BY total_orders DESC
 LIMIT 10;
+
+
+-- ── 8. Driver performance summary ────────────────────────────────────────────
+CREATE OR REPLACE VIEW vw_driver_performance AS
+SELECT
+    dd.driver_id,
+    dd.driver_name,
+    dd.city,
+    dd.vehicle_type,
+    COUNT(fdt.trip_key)                          AS total_trips,
+    ROUND(AVG(fdt.duration_minutes)::numeric, 2) AS avg_duration_minutes,
+    ROUND(AVG(fdt.distance_km)::numeric, 3)      AS avg_distance_km,
+    ROUND(AVG(fdt.avg_speed_kmh)::numeric, 2)    AS avg_speed_kmh,
+    SUM(CASE WHEN fdt.sla_breach_flag THEN 1 ELSE 0 END) AS sla_breaches,
+    ROUND(
+        100.0 * SUM(CASE WHEN fdt.sla_breach_flag THEN 1 ELSE 0 END)
+        / NULLIF(COUNT(fdt.trip_key), 0),
+        1
+    )                                            AS sla_breach_rate_pct,
+    SUM(fdt.ping_count)                          AS total_gps_pings
+FROM dim_driver dd
+LEFT JOIN fact_delivery_trip fdt ON dd.driver_key = fdt.driver_key
+GROUP BY dd.driver_id, dd.driver_name, dd.city, dd.vehicle_type
+ORDER BY total_trips DESC;
+
+
+-- ── 9. Delivery SLA compliance by zone ───────────────────────────────────────
+CREATE OR REPLACE VIEW vw_delivery_sla_by_zone AS
+SELECT
+    dz.zone_id,
+    dz.zone_name,
+    dz.city,
+    dz.avg_delivery_radius_km,
+    COUNT(fdt.trip_key)                          AS total_deliveries,
+    SUM(CASE WHEN fdt.sla_breach_flag THEN 1 ELSE 0 END) AS sla_breaches,
+    ROUND(
+        100.0 * SUM(CASE WHEN fdt.sla_breach_flag THEN 1 ELSE 0 END)
+        / NULLIF(COUNT(fdt.trip_key), 0),
+        1
+    )                                            AS sla_breach_rate_pct,
+    ROUND(AVG(fdt.duration_minutes)::numeric, 2) AS avg_duration_minutes,
+    ROUND(MIN(fdt.duration_minutes)::numeric, 2) AS min_duration_minutes,
+    ROUND(MAX(fdt.duration_minutes)::numeric, 2) AS max_duration_minutes,
+    ROUND(AVG(fdt.distance_km)::numeric, 3)      AS avg_distance_km
+FROM fact_delivery_trip fdt
+JOIN fact_order          fo ON fdt.order_id = fo.platform_order_id
+JOIN dim_delivery_zone   dz ON fo.zone_key  = dz.zone_key
+WHERE fdt.duration_minutes >= 0
+GROUP BY dz.zone_id, dz.zone_name, dz.city, dz.avg_delivery_radius_km
+ORDER BY sla_breach_rate_pct DESC;
+
+
+-- ── 10. Sensor alert summary by kitchen and type ─────────────────────────────
+CREATE OR REPLACE VIEW vw_sensor_alert_summary AS
+SELECT
+    k.kitchen_id,
+    k.name                                   AS kitchen_name,
+    k.city,
+    fsh.sensor_type,
+    fsh.zone,
+    DATE(fsh.hour)                           AS alert_date,
+    COUNT(CASE WHEN fsh.anomaly_count > 0 THEN 1 END) AS alert_hours,
+    SUM(fsh.anomaly_count)                   AS total_anomalies,
+    SUM(fsh.reading_count)                   AS total_readings,
+    ROUND(
+        100.0 * SUM(fsh.anomaly_count) / NULLIF(SUM(fsh.reading_count), 0),
+        2
+    )                                        AS anomaly_rate_pct,
+    ROUND(AVG(fsh.avg_value)::numeric, 2)    AS avg_sensor_value,
+    ROUND(MAX(fsh.max_value)::numeric, 2)    AS peak_value
+FROM fact_sensor_hourly fsh
+JOIN dim_kitchen k ON fsh.kitchen_id = k.kitchen_id
+GROUP BY k.kitchen_id, k.name, k.city, fsh.sensor_type, fsh.zone, DATE(fsh.hour)
+HAVING SUM(fsh.anomaly_count) > 0
+ORDER BY total_anomalies DESC, alert_date DESC;
+
+
+-- ── 11. Kitchen throughput vs capacity ───────────────────────────────────────
+CREATE OR REPLACE VIEW vw_kitchen_throughput AS
+SELECT
+    k.kitchen_id,
+    k.name                                       AS kitchen_name,
+    k.city,
+    k.capacity_orders_per_hour,
+    d.full_date                                  AS order_date,
+    EXTRACT(HOUR FROM fo.order_placed_ts)        AS order_hour,
+    COUNT(fo.platform_order_id)                  AS orders_in_hour,
+    ROUND(
+        100.0 * COUNT(fo.platform_order_id)
+        / NULLIF(k.capacity_orders_per_hour, 0),
+        1
+    )                                            AS capacity_utilization_pct,
+    CASE
+        WHEN COUNT(fo.platform_order_id) > k.capacity_orders_per_hour
+            THEN TRUE ELSE FALSE
+    END                                          AS is_over_capacity,
+    SUM(fo.order_total_cents)                    AS revenue_cents,
+    ROUND(SUM(fo.order_total_cents) / 100.0, 2) AS revenue_dollars
+FROM fact_order fo
+JOIN dim_kitchen k ON fo.kitchen_key = k.kitchen_key
+JOIN dim_date    d ON fo.date_key     = d.date_key
+GROUP BY
+    k.kitchen_id, k.name, k.city, k.capacity_orders_per_hour,
+    d.full_date, EXTRACT(HOUR FROM fo.order_placed_ts)
+ORDER BY capacity_utilization_pct DESC;

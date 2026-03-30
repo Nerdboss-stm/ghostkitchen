@@ -49,7 +49,7 @@ def create_delivery():
     return {
         "delivery_id": f"DEL-{zone_name[:3]}-{datetime.utcnow().strftime('%Y%m%d')}-{delivery_counter:06d}",
         "order_id": f"{'UE' if random.random() < 0.4 else 'DD' if random.random() < 0.7 else 'OA'}-{datetime.utcnow().strftime('%Y%m%d')}-{random.randint(100000,999999)}",
-        "driver_id": f"DRV-{random.randint(1000, 9999)}",
+        "driver_id": f"DRV-{random.randint(1000, 1199)}",
         "zone": zone_name,
         "start_lat": start_lat, "start_lon": start_lon,
         "end_lat": end_lat, "end_lon": end_lon,
