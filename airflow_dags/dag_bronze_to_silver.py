@@ -77,6 +77,14 @@ with DAG(
         ),
     )
 
+    gps_silver = BashOperator(
+        task_id="gps_silver",
+        bash_command=(
+            f"cd {GHOSTKITCHEN_DIR} && "
+            f"{PYTHON} -m transformations.bronze_to_silver.gps_silver"
+        ),
+    )
+
     # Dependencies
     order_schema_alignment >> data_vault_loader >> customer_identity_bridge
-    # menu_cdc_processor and sensor_silver are independent of order flow
+    # menu_cdc_processor, sensor_silver, gps_silver are independent of order flow

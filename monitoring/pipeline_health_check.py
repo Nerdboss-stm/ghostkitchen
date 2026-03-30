@@ -32,6 +32,7 @@ EXPECTED_MIN_ROWS = {
     "dim_kitchen":          50,   # exactly 50 kitchens
     "dim_brand":             8,   # exactly 8 brands
     "dim_delivery_zone":    50,   # 10 cities × 5 zones
+    "dim_driver":          200,   # 20 drivers × 10 cities
     "dim_menu_item":         1,
     "dim_customer":          1,
     "bridge_kitchen_brand":  1,
@@ -159,6 +160,41 @@ def check_pii(spark):
         warn(f"PII check skipped — {e}")
 
 
+# ── 6. Silver Data Vault integrity ───────────────────────────────────────────
+
+def check_silver_vault(spark):
+    print("\n── Silver Data Vault Table Checks ────────────────────────────")
+    SILVER_BASE = "s3a://ghostkitchen-lakehouse/silver"
+
+    vault_tables = {
+        "vault/hub_customer":              1,
+        "vault/hub_order":                 1,
+        "vault/hub_kitchen":               1,
+        "vault/hub_menu_item":             1,
+        "vault/link_order_customer":       1,
+        "vault/link_order_kitchen_brand":  1,
+        "vault/sat_order_details":         1,
+        "vault/sat_order_status":          1,
+        "vault/sat_menu_item_details":     1,
+        "identity/customer_identity_bridge": 1,
+        "gps_pings":                       1,
+        "sensors":                         1,
+        "sensor_alerts":                   1,
+    }
+
+    for table, min_rows in vault_tables.items():
+        path = f"{SILVER_BASE}/{table}"
+        try:
+            df  = spark.read.format("delta").load(path)
+            cnt = df.count()
+            if cnt >= min_rows:
+                ok(f"silver/{table:42s}  {cnt:>8,} rows")
+            else:
+                fail(f"silver/{table}: expected >= {min_rows} rows, got {cnt}")
+        except Exception as e:
+            fail(f"silver/{table}: table unreadable — {e}")
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 def main():
@@ -170,6 +206,7 @@ def main():
     spark = get_spark_session("GhostKitchen-HealthCheck")
 
     check_gold_tables(spark)
+    check_silver_vault(spark)
     check_bronze_freshness(spark)
     check_fk_integrity(spark)
     check_grain(spark)

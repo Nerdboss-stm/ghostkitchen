@@ -56,9 +56,10 @@ with DAG(
     dim_time = spark_task("dim_time", "transformations.silver_to_gold.dim_time")
 
     # ── Group 2: no dependencies ──────────────────────────────────────────────
-    dim_kitchen      = spark_task("dim_kitchen",       "transformations.silver_to_gold.dim_kitchen")
-    dim_brand        = spark_task("dim_brand",         "transformations.silver_to_gold.dim_brand")
-    dim_delivery_zone = spark_task("dim_delivery_zone","transformations.silver_to_gold.dim_delivery_zone")
+    dim_kitchen       = spark_task("dim_kitchen",       "transformations.silver_to_gold.dim_kitchen")
+    dim_brand         = spark_task("dim_brand",         "transformations.silver_to_gold.dim_brand")
+    dim_delivery_zone = spark_task("dim_delivery_zone", "transformations.silver_to_gold.dim_delivery_zone")
+    dim_driver        = spark_task("dim_driver",        "transformations.silver_to_gold.dim_driver")
 
     # ── Group 3: depends on dim_brand ────────────────────────────────────────
     dim_menu_item = spark_task("dim_menu_item", "transformations.silver_to_gold.dim_menu_item")
@@ -93,4 +94,4 @@ with DAG(
     [dim_date, dim_time, dim_kitchen, dim_brand, dim_delivery_zone, dim_customer] >> fact_order
     [dim_kitchen, fact_order] >> fact_order_state_history
     dim_kitchen >> fact_sensor_hourly
-    fact_order >> fact_delivery_trip
+    [fact_order, dim_driver] >> fact_delivery_trip

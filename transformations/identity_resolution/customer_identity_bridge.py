@@ -33,6 +33,8 @@ def build_identity_bridge(silver_df: DataFrame, spark: SparkSession):
         ).otherwise(
             F.lit("platform_id_fallback")
         ).alias("match_method"),
+        F.when(F.col("raw_email").isNotNull(), F.lit(1.0).cast("double"))
+         .otherwise(F.lit(0.5).cast("double")).alias("match_confidence"),
         F.current_timestamp().alias("first_seen"),
         F.current_timestamp().alias("last_seen")
     ).filter(
@@ -51,7 +53,8 @@ def build_identity_bridge(silver_df: DataFrame, spark: SparkSession):
            AND bridge.platform = new.platform
            AND bridge.platform_customer_id = new.platform_customer_id"""
     ).whenMatchedUpdate(set={
-        "last_seen": "new.last_seen"
+        "last_seen":         "new.last_seen",
+        "match_confidence":  "new.match_confidence"
     }).whenNotMatchedInsertAll().execute()
     print("  customer_identity_bridge merged")
 
