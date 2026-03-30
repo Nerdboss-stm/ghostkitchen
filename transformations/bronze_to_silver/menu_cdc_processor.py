@@ -64,12 +64,37 @@ def _dedup_latest(df: DataFrame) -> DataFrame:
     )
 
 
+def load_hub_menu_item(creates: DataFrame, spark: SparkSession):
+    hub_path = f"{SILVER_BASE}/vault/hub_menu_item"
+
+    hub_records = creates.select(
+        F.col("item_hash_key").alias("menu_item_hk"),
+        F.concat_ws("||", F.col("brand"), F.col("after_item_id")).alias("menu_item_bk"),
+        F.col("load_timestamp").alias("load_ts"),
+        F.lit("menu_cdc").alias("record_source")
+    ).filter(F.col("after_item_id").isNotNull()) \
+     .dropDuplicates(["menu_item_hk"])
+
+    if not DeltaTable.isDeltaTable(spark, hub_path):
+        hub_records.write.format("delta").save(hub_path)
+        print(f"  hub_menu_item created: {hub_records.count()} rows")
+        return
+
+    DeltaTable.forPath(spark, hub_path).alias("hub").merge(
+        hub_records.alias("new"),
+        "hub.menu_item_hk = new.menu_item_hk"
+    ).whenNotMatchedInsertAll().execute()
+    print("  hub_menu_item merged")
+
+
 def load_sat_menu_item(cdc_df: DataFrame, spark: SparkSession):
     sat_path = f"{SILVER_BASE}/vault/sat_menu_item_details"
 
     creates = _dedup_latest(cdc_df.filter(F.col("op") == "c"))
     updates  = _dedup_latest(cdc_df.filter(F.col("op") == "u"))
     deletes  = _dedup_latest(cdc_df.filter(F.col("op") == "d"))
+
+    load_hub_menu_item(creates, spark)
 
     if not DeltaTable.isDeltaTable(spark, sat_path):
         to_sat_row(creates).write.format("delta").save(sat_path)
