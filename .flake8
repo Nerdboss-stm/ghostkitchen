@@ -1,0 +1,37 @@
+[flake8]
+max-line-length = 150
+extend-ignore =
+    # Trailing/blank whitespace — cosmetic
+    W291, W293, W292, W391,
+    # Blank line counts — Spark scripts use 1-blank-line convention
+    E302, E303, E305,
+    # Import ordering — sys.path.insert must precede imports in Spark scripts
+    E401, E402,
+    # Continuation line indentation — unavoidable in Spark method chains
+    E124, E127, E128, E131,
+    # Operator/comma/bracket spacing — Spark column alignment uses extra spaces
+    E203, E221, E225, E231, E202,
+    # Unused imports — many are re-exported or conditionally used in Spark scripts
+    F401,
+    # Star imports — pyspark.sql.types.* is common in Spark scripts
+    F403, F405,
+    # Unused local variable — GOLD_BASE sometimes defined but used via f-string
+    F841,
+    # f-string without placeholder — some are used as log templates
+    F541,
+    # Comparison to True — Spark filter patterns use == True
+    E712,
+    # Closing bracket indentation
+    E501,
+per-file-ignores =
+    # assert False pattern is acceptable in test stubs
+    tests/*.py: B011, B007
+exclude =
+    venv/,
+    .venv/,
+    __pycache__/,
+    .git/,
+    .claude/,
+    *.egg-info/,
+    sample.py,
+    ghostkitchen_issues.sh

@@ -39,7 +39,7 @@ _ZONE_META = {
 
 def _build_zones() -> list:
     rows = []
-    for city, (lat, lon, abbrev) in _CITY_CENTERS.items():
+    for city, (_lat, _lon, abbrev) in _CITY_CENTERS.items():
         for zone_suffix, meta in _ZONE_META.items():
             zone_id   = f"{abbrev}-{zone_suffix}"
             zone_name = f"{city} {meta['display']}"
