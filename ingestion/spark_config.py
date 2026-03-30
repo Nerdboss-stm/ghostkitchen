@@ -54,6 +54,7 @@ def get_spark_session(app_name="GhostKitchen"):
             "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.1",
             "org.apache.hadoop:hadoop-aws:3.4.1",
             "com.amazonaws:aws-java-sdk-bundle:1.12.262",
+            "org.postgresql:postgresql:42.7.3",
         ]
     ).getOrCreate()
     spark.sparkContext.setLogLevel("WARN")  # Reduce noisy logs

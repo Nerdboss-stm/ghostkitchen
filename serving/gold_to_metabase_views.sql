@@ -41,7 +41,7 @@ SELECT
     d.full_date                              AS order_date,
     d.year,
     d.month,
-    b.brand_id,
+    b.brand_key,
     b.brand_name,
     b.cuisine_type,
     COUNT(*)                                 AS order_count,
@@ -56,7 +56,7 @@ JOIN dim_date  d ON fo.date_key  = d.date_key
 JOIN dim_brand b ON fo.brand_key = b.brand_key
 GROUP BY
     d.full_date, d.year, d.month,
-    b.brand_id, b.brand_name, b.cuisine_type, fo.platform
+    b.brand_key, b.brand_name, b.cuisine_type, fo.platform
 ORDER BY d.full_date DESC, total_revenue_cents DESC;
 
 
@@ -69,11 +69,11 @@ SELECT
     dz.zone_name,
     dz.city,
     COUNT(fdt.trip_key)                         AS trip_count,
-    ROUND(AVG(fdt.duration_minutes), 2)         AS avg_duration_minutes,
-    ROUND(MIN(fdt.duration_minutes), 2)         AS min_duration_minutes,
-    ROUND(MAX(fdt.duration_minutes), 2)         AS max_duration_minutes,
-    ROUND(AVG(fdt.distance_km), 3)              AS avg_distance_km,
-    ROUND(AVG(fdt.avg_speed_kmh), 2)            AS avg_speed_kmh
+    ROUND(AVG(fdt.duration_minutes)::numeric, 2) AS avg_duration_minutes,
+    ROUND(MIN(fdt.duration_minutes)::numeric, 2) AS min_duration_minutes,
+    ROUND(MAX(fdt.duration_minutes)::numeric, 2) AS max_duration_minutes,
+    ROUND(AVG(fdt.distance_km)::numeric, 3)      AS avg_distance_km,
+    ROUND(AVG(fdt.avg_speed_kmh)::numeric, 2)    AS avg_speed_kmh
 FROM fact_delivery_trip fdt
 JOIN fact_order          fo ON fdt.order_id = fo.platform_order_id
 JOIN dim_delivery_zone   dz ON fo.zone_key  = dz.zone_key

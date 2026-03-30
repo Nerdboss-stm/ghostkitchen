@@ -77,5 +77,24 @@ services:
     volumes:
       - minio_data:/data
 
+  # ─── POSTGRES (Serving Layer) ───────────────────────
+  postgres:
+    image: postgres:16
+    container_name: gk_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ghostkitchen
+      POSTGRES_USER: ghostkitchen
+      POSTGRES_PASSWORD: ghostkitchen
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ghostkitchen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   minio_data:
+  postgres_data:
