@@ -23,6 +23,29 @@ Gold layer with identity resolution across platforms.
 - **3 order platforms**: Uber Eats, DoorDash, OwnApp (different schemas)
 - **Identity resolution**: MD5-keyed hub unifies customers across all 3 platforms
 
+## Prerequisites
+
+| Requirement | Version | Notes |
+|---|---|---|
+| Java | **17** (Temurin / Homebrew) | PySpark 4.x requires Java 17 — Java 8/11 will fail |
+| Python | 3.10+ | via pyenv recommended |
+| Docker Desktop | latest | runs Kafka, MinIO, PostgreSQL |
+| GNU coreutils | any | macOS only — `brew install coreutils` — fixes `head -n -1` in Spark startup scripts |
+
+**macOS setup (one-time):**
+```bash
+brew install openjdk@17 coreutils
+```
+
+Add to `~/.zshrc`:
+```bash
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="$(brew --prefix coreutils)/libexec/gnubin:$PATH"
+export JAVA_HOME="$(brew --prefix openjdk@17)"
+export PATH="$JAVA_HOME/bin:$PATH"
+eval "$(pyenv init -)"
+```
+
 ## Quick Start
 
 ```bash
@@ -64,6 +87,16 @@ python -m transformations.silver_to_gold.fact_delivery_trip
 # 7 — Validate
 python -m data_quality.run_quality_checks
 python -m monitoring.pipeline_health_check
+
+# 8 — Export to PostgreSQL + apply Metabase views
+export POSTGRES_HOST=127.0.0.1
+export POSTGRES_PORT=5432
+export POSTGRES_DB=ghostkitchen
+export POSTGRES_USER=ghostkitchen
+export POSTGRES_PASSWORD=ghostkitchen
+
+python serving/export_gold_to_postgres.py
+psql -h 127.0.0.1 -U ghostkitchen -d ghostkitchen -f serving/gold_to_metabase_views.sql
 ```
 
 ## Project Status
@@ -107,6 +140,7 @@ python -m monitoring.pipeline_health_check
 | MinIO Console | 9001 | minioadmin / minioadmin |
 | Spark Master | 8080 | — |
 | Spark Driver UI | 4040 | — |
+| PostgreSQL | 5432 | ghostkitchen / ghostkitchen |
 
 ## Documentation
 
