@@ -36,20 +36,32 @@ from ingestion.spark_config import get_spark_session
 
 GOLD_BASE = "s3a://ghostkitchen-lakehouse/gold"
 
-# Tables exported in dependency order (dims before facts)
+# Tables exported in dependency order (dims before facts).
+# Batch layer: standard Gold Star Schema tables.
+# Speed layer: streaming Gold tables written by the Lambda speed-layer jobs
+#   (transformations/streaming/streaming_*.py).  These are exported on a
+#   shorter cadence (every 5 min) and UNION'd with the batch tables in the
+#   Metabase views to give Metabase a single ~30-second-fresh result set.
 GOLD_TABLES = [
+    # ── Dimensions ──────────────────────────────────────────────────────
     "dim_date",
     "dim_time",
     "dim_kitchen",
     "dim_brand",
     "dim_delivery_zone",
+    "dim_driver",
     "dim_menu_item",
     "dim_customer",
     "bridge_kitchen_brand",
+    # ── Batch fact tables ────────────────────────────────────────────────
     "fact_order",
     "fact_order_state_history",
     "fact_sensor_hourly",
     "fact_delivery_trip",
+    # ── Speed-layer (streaming) Gold tables ─────────────────────────────
+    "streaming/order_summary",
+    "streaming/sensor_anomaly_live",
+    "streaming/active_deliveries",
 ]
 
 
