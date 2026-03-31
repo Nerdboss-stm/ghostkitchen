@@ -362,9 +362,9 @@ export default function LiveDashboard() {
             icon={Clock}
           />
           <KpiCard
-            label="SLA Breach"
-            value={kpis?.sla_breach_pct != null ? `${kpis.sla_breach_pct}%` : null}
-            sub="of deliveries"
+            label="SLA Breaches"
+            value={kpis?.sla_breach_count != null ? kpis.sla_breach_count : null}
+            sub={kpis?.sla_breach_pct != null ? `${kpis.sla_breach_pct}% of deliveries` : 'SLA: 45 min'}
             color={kpis?.sla_breach_pct > 20 ? '#FF3D57' : '#FFB547'}
           />
         </div>

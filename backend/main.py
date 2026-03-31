@@ -375,6 +375,9 @@ async def dashboard_kpis():
         sla_pct = await conn.fetchval(
             "SELECT COALESCE(AVG(CASE WHEN sla_breach_flag THEN 1.0 ELSE 0.0 END),0) FROM fact_delivery_trip"
         ) or 0
+        sla_count = await conn.fetchval(
+            "SELECT COUNT(*) FROM fact_delivery_trip WHERE sla_breach_flag = TRUE"
+        ) or 0
         multi = await conn.fetchval("""
             SELECT COUNT(*) FROM (
                 SELECT customer_key FROM fact_order
@@ -386,6 +389,7 @@ async def dashboard_kpis():
         "order_count": int(orders),
         "avg_delivery_min": round(float(avg_del), 1),
         "sla_breach_pct": round(float(sla_pct) * 100, 1),
+        "sla_breach_count": int(sla_count),
         "multi_platform_customers": int(multi),
     }
 

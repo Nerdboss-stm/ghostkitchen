@@ -182,18 +182,21 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
       <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 28, fontWeight: 800, color: '#D4E5FF', marginBottom: 6 }}>
         Pipeline Complete
       </h2>
-      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', marginBottom: 28 }}>
-        {duration}s · {stats?.ge_passed}/{stats?.ge_checks} checks passed
+      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', marginBottom: 6 }}>
+        {duration}s · {stats?.ge_passed}/{stats?.ge_checks} DQ checks passed
+      </p>
+      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', marginBottom: 28 }}>
+        {stats?.orders_normalised} orders unified · {stats?.identity_resolved} customers resolved · 24 PII fields masked
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28, width: '100%', maxWidth: 480, padding: '0 16px' }}>
         {[
-          { label: 'Orders', value: stats?.orders_normalised },
-          { label: 'GPS Pings', value: stats?.gps_pings },
-          { label: 'Identities', value: stats?.identity_resolved },
-          { label: 'Anomalies', value: stats?.sensor_anomalies },
+          { label: 'Orders Unified', value: stats?.orders_normalised },
+          { label: 'GPS Validated', value: stats?.gps_pings },
+          { label: 'IDs Resolved', value: stats?.identity_resolved },
+          { label: 'Sensor Anomalies', value: stats?.sensor_anomalies },
           { label: 'Gold Rows', value: stats?.total_gold_rows },
-          { label: 'GE Pass', value: stats?.ge_passed },
+          { label: 'DQ Passed', value: stats?.ge_passed },
         ].map((s) => (
           <div key={s.label} className="gk-card" style={{ padding: '10px 12px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Inter, sans-serif', color: '#00C2FF' }}>
@@ -354,6 +357,14 @@ export default function PipelineOrchestrator() {
             ))}
           </div>
 
+          {/* Problem framing */}
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#4A4A5A', textAlign: 'center', marginBottom: 2 }}>
+            50 ghost kitchens. 3 delivery platforms.
+          </p>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#6B82A8', textAlign: 'center', marginBottom: 20, maxWidth: 480 }}>
+            $0 data trust between them. This pipeline fixes that.
+          </p>
+
           <h1 style={{
             fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 'clamp(40px, 7vw, 68px)',
             color: '#D4E5FF', textAlign: 'center', lineHeight: 1.05, marginBottom: 12,
@@ -364,9 +375,21 @@ export default function PipelineOrchestrator() {
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', textAlign: 'center', marginBottom: 6, maxWidth: 480 }}>
             Bronze → Silver → Gold · Data Vault 2.0 · Star Schema · Identity Resolution
           </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 28, maxWidth: 520 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 20, maxWidth: 520 }}>
             Modelled on the Texas ghost kitchen market — 50 virtual dark kitchens across Houston, Dallas, Austin and 7 other TX cities
           </p>
+
+          {/* Why Lambda callout */}
+          <div style={{
+            marginBottom: 28, padding: '10px 16px', borderRadius: 10,
+            border: '1px solid rgba(255, 181, 71, 0.25)', background: 'rgba(255, 181, 71, 0.06)',
+            maxWidth: 460, textAlign: 'left',
+          }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#FFB547', marginBottom: 4 }}>⚖ Lambda over Kappa</p>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
+              Order corrections need full batch reprocessing — streaming-only (Kappa) can't replay state machines retroactively. Dual-path gives real-time UX and correctness.
+            </p>
+          </div>
 
           {/* Stats strip */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, justifyContent: 'center', marginBottom: 32 }}>
