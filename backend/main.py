@@ -33,6 +33,10 @@ _run_events: dict = {}
 _run_done: dict = {}
 _run_lock = threading.Lock()
 
+# ── Global pipeline semaphore: only 1 real run at a time ─────────────────────
+_pipeline_semaphore = threading.Semaphore(1)
+_active_run_id: str | None = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,7 +63,19 @@ def _emit(run_id: str, event: dict):
 
 
 def _run_pipeline(run_id: str):
+    global _active_run_id
     conn = None
+    acquired = _pipeline_semaphore.acquire(blocking=True, timeout=5)
+    if not acquired:
+        _emit(run_id, {
+            "stage": "ERROR", "status": "error", "pct": 100,
+            "error": "Another pipeline run is in progress. Please wait ~60s and try again.",
+            "logs": ["Pipeline busy — only one concurrent run allowed to protect data integrity."],
+        })
+        with _run_lock:
+            _run_done[run_id] = True
+        return
+    _active_run_id = run_id
     try:
         conn = get_sync_conn()
         cur = conn.cursor()
@@ -251,9 +267,18 @@ def _run_pipeline(run_id: str):
             conn.close()
         with _run_lock:
             _run_done[run_id] = True
+        _pipeline_semaphore.release()
+        global _active_run_id
+        _active_run_id = None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.get("/pipeline/status")
+async def pipeline_status():
+    busy = _active_run_id is not None
+    return {"busy": busy, "active_run_id": _active_run_id}
+
 
 @app.post("/run")
 async def trigger_run():
@@ -263,7 +288,7 @@ async def trigger_run():
         _run_done[run_id] = False
     t = threading.Thread(target=_run_pipeline, args=(run_id,), daemon=True)
     t.start()
-    return {"run_id": run_id}
+    return {"run_id": run_id, "busy_check": "/pipeline/status"}
 
 
 @app.get("/run/{run_id}/stream")
