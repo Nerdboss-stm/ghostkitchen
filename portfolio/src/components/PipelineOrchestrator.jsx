@@ -340,7 +340,8 @@ export default function PipelineOrchestrator() {
       {phase === 'idle' && (
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', padding: '0 16px', position: 'relative', zIndex: 1,
+          justifyContent: 'flex-start', padding: '32px 16px 40px', position: 'relative', zIndex: 1,
+          overflowY: 'auto',
         }}>
           {/* Badge row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
