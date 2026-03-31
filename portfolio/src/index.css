@@ -4,19 +4,19 @@
 @tailwind utilities;
 
 :root {
-  --bg: #080D1A;
-  --surface: #0B1220;
-  --surface-2: #101828;
-  --border: #1A2640;
-  --border-bright: #243550;
-  --teal: #0EA5E9;
-  --emerald: #10B981;
-  --amber: #F59E0B;
-  --crimson: #EF4444;
-  --violet: #8B5CF6;
-  --text-1: #D4E5FF;
-  --text-2: #6B82A8;
-  --text-3: #2D4060;
+  --bg: #0C0C0F;
+  --surface: #111116;
+  --surface-2: #17171D;
+  --border: #2A2A35;
+  --border-bright: #38384A;
+  --teal: #E8601C;
+  --emerald: #22C55E;
+  --amber: #FBBF24;
+  --crimson: #F87171;
+  --violet: #A78BFA;
+  --text-1: #F4F4F6;
+  --text-2: #9191A4;
+  --text-3: #4A4A5A;
 
   /* Legacy aliases for backward compat */
   --card: var(--surface-2);

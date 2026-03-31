@@ -341,13 +341,13 @@ export default function PipelineOrchestrator() {
         }}>
           {/* Badge row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
-            {['Lambda Architecture', 'DuckDB', 'PostgreSQL', 'Data Vault 2.0'].map((b) => (
+            {['Apache Kafka', 'Apache Spark 3.5', 'Apache Airflow', 'Delta Lake', 'Data Vault 2.0'].map((b) => (
               <span key={b} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '4px 12px', borderRadius: 20,
-                border: '1px solid rgba(0, 194, 255, 0.2)',
-                background: 'rgba(0, 194, 255, 0.05)',
-                fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#00C2FF',
+                border: '1px solid rgba(232, 96, 28, 0.25)',
+                background: 'rgba(232, 96, 28, 0.06)',
+                fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#E8601C',
               }}>
                 {b}
               </span>
@@ -403,11 +403,8 @@ export default function PipelineOrchestrator() {
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center' }}>
             Executes a full data pipeline in the cloud · ~60 seconds · Results live for 48h
           </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textAlign: 'center', marginTop: 4 }}>
-            Demo engine: DuckDB + Python — same medallion concepts, no JVM, fits a $5/mo container.
-          </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#1A2640', textAlign: 'center', marginTop: 3 }}>
-            Would migrate to Spark 3.5 + Delta Lake at &gt;10M daily events — that threshold hasn't landed yet.
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', textAlign: 'center', marginTop: 4 }}>
+            Cloud demo · production stack: Kafka → Spark 3.5 → Airflow → Delta Lake on S3
           </p>
         </div>
       )}

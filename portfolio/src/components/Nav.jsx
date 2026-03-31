@@ -57,11 +57,17 @@ export default function Nav() {
               fontFamily: 'Inter, sans-serif',
               fontWeight: 700,
               fontSize: 15,
-              color: '#D4E5FF',
+              color: '#F4F4F6',
               letterSpacing: '-0.01em',
             }}
           >
             GhostKitchen
+          </span>
+          <span style={{
+            fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#4A4A5A',
+            fontWeight: 400, letterSpacing: '0',
+          }}>
+            by Saran Teja Mallela
           </span>
           <span
             style={{

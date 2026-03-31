@@ -400,7 +400,7 @@ export default function LiveDashboard() {
         {/* Footer */}
         <div className="section-divider" style={{ marginBottom: 14 }} />
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20, paddingBottom: 20 }}>
-          {['Lambda Architecture · Batch + Speed Layer', '15 views · 11 batch + 4 Lambda UNION', 'Data Vault 2.0 · SHA-256 identity resolution', 'Built on Railway + Vercel'].map((t) => (
+          {['Kafka · Spark 3.5 · Airflow · Delta Lake', 'Data Vault 2.0 · SHA-256 identity resolution', 'Lambda Architecture · Batch + Speed Layer', 'Saran Teja Mallela'].map((t) => (
             <span key={t} style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060' }}>{t}</span>
           ))}
         </div>
