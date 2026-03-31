@@ -48,11 +48,11 @@ function buildKitchens() {
 const BASE_KITCHENS = buildKitchens()
 
 function markerColor(utilization, isHighlighted, isDimmed) {
-  if (isDimmed) return '#142038'
+  if (isDimmed) return '#2C2C2E'
   if (utilization > 80) return '#FF3D57'
   if (utilization > 50) return '#FFB547'
   if (utilization > 0) return '#00E5A0'
-  return isHighlighted ? '#00C2FF' : '#1E3254'
+  return isHighlighted ? '#F59E0B' : '#3A3A3C'
 }
 
 function MapRecenter({ center, zoom }) {
@@ -112,19 +112,19 @@ export default function KitchenMap() {
       {/* Sidebar */}
       <div style={{
         width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
-        borderRight: '1px solid #142038', background: '#070E1A',
+        borderRight: '1px solid #2C2C2E', background: '#1C1C1E',
         overflowY: 'auto',
       }}>
         {/* Sidebar header */}
-        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #142038' }}>
-          <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 16, color: '#D4E5FF', marginBottom: 4 }}>
+        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #2C2C2E' }}>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 16, color: '#F4F4F5', marginBottom: 4 }}>
             Kitchen Map
           </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', marginBottom: 10 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', marginBottom: 10 }}>
             Texas Ghost Kitchen Network
           </div>
           {/* Summary stats */}
-          <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid #142038' }}>
+          <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid #2C2C2E' }}>
             {[
               { v: '50', l: 'Kitchens' },
               { v: '10', l: 'Cities' },
@@ -132,11 +132,11 @@ export default function KitchenMap() {
             ].map(({ v, l }, i) => (
               <div key={l} style={{
                 flex: 1, padding: '8px 6px', textAlign: 'center',
-                background: '#0C1525',
-                borderRight: i < 2 ? '1px solid #142038' : 'none',
+                background: '#252528',
+                borderRight: i < 2 ? '1px solid #2C2C2E' : 'none',
               }}>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, color: '#00C2FF' }}>{v}</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 1 }}>{l}</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, color: '#F59E0B' }}>{v}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 1 }}>{l}</div>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function KitchenMap() {
 
         {/* City filter */}
         <div style={{ padding: '12px 16px 0' }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
             Filter by City
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -160,8 +160,8 @@ export default function KitchenMap() {
                     display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                     padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
                     border: '1px solid',
-                    borderColor: isActive ? 'rgba(0,194,255,0.3)' : 'transparent',
-                    background: isActive ? 'rgba(0,194,255,0.08)' : 'transparent',
+                    borderColor: isActive ? 'rgba(245, 158, 11,0.3)' : 'transparent',
+                    background: isActive ? 'rgba(245, 158, 11,0.08)' : 'transparent',
                     transition: 'all 0.15s', textAlign: 'left',
                   }}
                   onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
@@ -169,16 +169,16 @@ export default function KitchenMap() {
                 >
                   <span style={{
                     width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                    background: avgUtil > 80 ? '#FF3D57' : avgUtil > 50 ? '#FFB547' : avgUtil > 0 ? '#00E5A0' : '#1E3254',
+                    background: avgUtil > 80 ? '#FF3D57' : avgUtil > 50 ? '#FFB547' : avgUtil > 0 ? '#00E5A0' : '#3A3A3C',
                   }} />
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 12, color: isActive ? '#D4E5FF' : '#6B82A8', flex: 1 }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 12, color: isActive ? '#F4F4F5' : '#A1A1AA', flex: 1 }}>
                     {CITY_NAMES[abbrev]}
                   </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
                     {cityKitchens.length}
                   </span>
                   {isActive && (
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#00C2FF' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#F59E0B' }}>
                       {avgUtil > 0 ? `${Math.round(avgUtil)}%` : '–'}
                     </span>
                   )}
@@ -189,23 +189,23 @@ export default function KitchenMap() {
         </div>
 
         {/* Legend */}
-        <div style={{ padding: 16, marginTop: 'auto', borderTop: '1px solid #142038' }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+        <div style={{ padding: 16, marginTop: 'auto', borderTop: '1px solid #2C2C2E' }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
             Utilization
           </div>
           {[
             { color: '#00E5A0', label: '< 50% — Normal' },
             { color: '#FFB547', label: '50–80% — Busy' },
             { color: '#FF3D57', label: '> 80% — At Capacity' },
-            { color: '#1E3254', label: 'No data' },
+            { color: '#3A3A3C', label: 'No data' },
           ].map(({ color, label }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#6B82A8' }}>{label}</span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#A1A1AA' }}>{label}</span>
             </div>
           ))}
           {loading && (
-            <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
+            <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
               Loading utilization data...
             </div>
           )}
@@ -236,9 +236,9 @@ export default function KitchenMap() {
               center={[k.lat, k.lon]}
               radius={5}
               pathOptions={{
-                fillColor: '#142038',
+                fillColor: '#2C2C2E',
                 fillOpacity: 0.4,
-                color: '#0C1525',
+                color: '#252528',
                 weight: 1,
               }}
             />
@@ -261,24 +261,24 @@ export default function KitchenMap() {
               >
                 <Popup>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", minWidth: 160 }}>
-                    <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: '#D4E5FF', marginBottom: 6 }}>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: '#F4F4F5', marginBottom: 6 }}>
                       {k.id}
                     </div>
-                    <div style={{ fontSize: 11, color: '#6B82A8', marginBottom: 8 }}>{k.city}, TX</div>
+                    <div style={{ fontSize: 11, color: '#A1A1AA', marginBottom: 8 }}>{k.city}, TX</div>
 
                     {k.utilization > 0 && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 10, color: '#2D4060', marginBottom: 3 }}>UTILIZATION</div>
-                        <div style={{ height: 5, borderRadius: 3, background: '#142038', marginBottom: 3 }}>
+                        <div style={{ fontSize: 10, color: '#636366', marginBottom: 3 }}>UTILIZATION</div>
+                        <div style={{ height: 5, borderRadius: 3, background: '#2C2C2E', marginBottom: 3 }}>
                           <div style={{ height: '100%', borderRadius: 3, width: `${k.utilization}%`, background: color }} />
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 600, color }}>{k.utilization}%</div>
                       </div>
                     )}
 
-                    <div style={{ fontSize: 10, color: '#2D4060', marginBottom: 4 }}>BRANDS ({k.brands.length})</div>
+                    <div style={{ fontSize: 10, color: '#636366', marginBottom: 4 }}>BRANDS ({k.brands.length})</div>
                     {k.brands.map((b) => (
-                      <div key={b} style={{ fontSize: 10, color: '#D4E5FF', padding: '2px 0' }}>· {b}</div>
+                      <div key={b} style={{ fontSize: 10, color: '#F4F4F5', padding: '2px 0' }}>· {b}</div>
                     ))}
                   </div>
                 </Popup>
@@ -290,9 +290,9 @@ export default function KitchenMap() {
         {/* Map overlay label */}
         <div style={{
           position: 'absolute', top: 12, right: 12, zIndex: 1000,
-          background: 'rgba(7,14,26,0.9)', border: '1px solid #142038',
+          background: 'rgba(7,14,26,0.9)', border: '1px solid #2C2C2E',
           borderRadius: 8, padding: '8px 12px',
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060',
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366',
         }}>
           {selectedCity ? `${CITY_NAMES[selectedCity]} · 5 kitchens` : '50 kitchens · Texas'}
         </div>

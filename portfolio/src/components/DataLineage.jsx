@@ -118,8 +118,8 @@ function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onCl
       style={{
         padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
         border: `1px solid`,
-        borderColor: isSelected ? layerColor : hovered ? layerBorder : '#142038',
-        background: isSelected ? layerGlow : hovered ? 'rgba(255,255,255,0.02)' : '#0C1525',
+        borderColor: isSelected ? layerColor : hovered ? layerBorder : '#2C2C2E',
+        background: isSelected ? layerGlow : hovered ? 'rgba(255,255,255,0.02)' : '#252528',
         transition: 'all 0.15s',
         boxShadow: isSelected ? `0 0 16px ${layerGlow}` : 'none',
         marginBottom: 6,
@@ -128,18 +128,18 @@ function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onCl
       <div style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11, fontWeight: 500,
-        color: isSelected ? layerColor : '#D4E5FF',
+        color: isSelected ? layerColor : '#F4F4F5',
         marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
         {table.name}
       </div>
-      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', marginBottom: table.rows != null ? 4 : 0 }}>
+      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', marginBottom: table.rows != null ? 4 : 0 }}>
         {table.desc}
       </div>
       {table.rows != null && (
         <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: layerColor }}>
           {table.rows.toLocaleString()}
-          <span style={{ fontSize: 9, fontWeight: 400, color: '#2D4060', marginLeft: 3 }}>rows</span>
+          <span style={{ fontSize: 9, fontWeight: 400, color: '#636366', marginLeft: 3 }}>rows</span>
         </div>
       )}
     </div>
@@ -183,18 +183,18 @@ export default function DataLineage() {
       {/* Header */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF', marginBottom: 2 }}>
+          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#F4F4F5', marginBottom: 2 }}>
             Data Lineage
           </h2>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
             Sources → Bronze → Silver → Gold → Analytics · End-to-end data provenance
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
           {lastRun && <span>Last run: {lastRun}</span>}
           <span style={{
             display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20,
-            border: '1px solid #142038', color: '#2D4060',
+            border: '1px solid #2C2C2E', color: '#636366',
           }}>
             5 layers · 25 tables
           </span>
@@ -226,7 +226,7 @@ export default function DataLineage() {
                   }}>
                     {layer.label}
                   </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#2D4060', marginLeft: 'auto' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#636366', marginLeft: 'auto' }}>
                     {layer.tables.length}
                   </span>
                 </div>
@@ -265,25 +265,25 @@ export default function DataLineage() {
           style={{
             flexShrink: 0, padding: '12px 16px',
             borderColor: selectedInfo.layerColor + '40',
-            background: '#070E1A',
+            background: '#1C1C1E',
             display: 'flex', alignItems: 'center', gap: 24,
             flexWrap: 'wrap',
           }}
         >
           <div>
-            <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
+            <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
               {selectedInfo.layerLabel} layer
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 14, color: selectedInfo.layerColor }}>
               {selectedInfo.name}
             </div>
           </div>
-          <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#6B82A8' }}>
+          <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#A1A1AA' }}>
             {selectedInfo.desc}
           </div>
           {selectedInfo.rows != null && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', marginBottom: 2 }}>ROW COUNT</div>
+              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', marginBottom: 2 }}>ROW COUNT</div>
               <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 20, color: selectedInfo.layerColor }}>
                 {selectedInfo.rows.toLocaleString()}
               </div>
@@ -291,7 +291,7 @@ export default function DataLineage() {
           )}
           <button
             onClick={() => setSelectedTable(null)}
-            style={{ background: 'none', border: '1px solid #142038', borderRadius: 6, padding: '4px 10px', color: '#2D4060', cursor: 'pointer', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
+            style={{ background: 'none', border: '1px solid #2C2C2E', borderRadius: 6, padding: '4px 10px', color: '#636366', cursor: 'pointer', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
           >
             ✕
           </button>
@@ -301,8 +301,8 @@ export default function DataLineage() {
       {/* Bottom bar */}
       <div style={{
         flexShrink: 0, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060',
-        paddingTop: 6, borderTop: '1px solid #142038',
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366',
+        paddingTop: 6, borderTop: '1px solid #2C2C2E',
       }}>
         {layers.map((l) => (
           <span key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>

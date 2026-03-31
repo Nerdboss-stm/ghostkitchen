@@ -4,19 +4,19 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0C0C0F;
-  --surface: #111116;
-  --surface-2: #17171D;
-  --border: #2A2A35;
-  --border-bright: #38384A;
+  --bg: #111111;
+  --surface: #1C1C1E;
+  --surface-2: #252528;
+  --border: #2C2C2E;
+  --border-bright: #3A3A3C;
   --teal: #E8601C;
   --emerald: #22C55E;
-  --amber: #FBBF24;
-  --crimson: #F87171;
+  --amber: #F59E0B;
+  --crimson: #EF4444;
   --violet: #A78BFA;
-  --text-1: #F4F4F6;
-  --text-2: #9191A4;
-  --text-3: #4A4A5A;
+  --text-1: #F4F4F5;
+  --text-2: #A1A1AA;
+  --text-3: #636366;
 
   /* Legacy aliases for backward compat */
   --card: var(--surface-2);
@@ -58,7 +58,7 @@ body {
 
 /* Dot grid background */
 .dot-grid {
-  background-image: radial-gradient(circle, #142038 1px, transparent 1px);
+  background-image: radial-gradient(circle, #2C2C2E 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -75,8 +75,8 @@ body {
 
 /* Neon glow animations */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 194, 255, 0.4), 0 0 40px rgba(0, 194, 255, 0.2); }
-  50% { box-shadow: 0 0 35px rgba(0, 194, 255, 0.8), 0 0 70px rgba(0, 194, 255, 0.4); }
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), 0 0 70px rgba(245, 158, 11, 0.4); }
 }
 
 @keyframes pulseGlowGreen {
@@ -156,7 +156,7 @@ body {
 
 /* Terminal styles */
 .terminal {
-  background: #020609;
+  background: #0A0A0A;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
@@ -199,8 +199,8 @@ body {
 }
 
 .gk-card-glow-teal {
-  border-color: rgba(0, 194, 255, 0.3);
-  box-shadow: 0 0 24px rgba(0, 194, 255, 0.06), inset 0 1px 0 rgba(0, 194, 255, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.06), inset 0 1px 0 rgba(245, 158, 11, 0.1);
 }
 
 .gk-card-glow-emerald {
@@ -209,7 +209,7 @@ body {
 }
 
 /* Legacy card aliases */
-.gk-card-glow-cyan { border-color: rgba(0, 194, 255, 0.3); box-shadow: 0 0 20px rgba(0, 194, 255, 0.05), inset 0 1px 0 rgba(0, 194, 255, 0.1); }
+.gk-card-glow-cyan { border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 20px rgba(245, 158, 11, 0.05), inset 0 1px 0 rgba(245, 158, 11, 0.1); }
 .gk-card-glow-green { border-color: rgba(0, 229, 160, 0.3); box-shadow: 0 0 20px rgba(0, 229, 160, 0.05), inset 0 1px 0 rgba(0, 229, 160, 0.1); }
 
 /* Stage connector line */
@@ -221,7 +221,7 @@ body {
 }
 
 .stage-connector.done {
-  background: linear-gradient(to bottom, var(--teal), rgba(0, 194, 255, 0.3));
+  background: linear-gradient(to bottom, var(--teal), rgba(245, 158, 11, 0.3));
 }
 
 /* Section dividers */
@@ -255,46 +255,46 @@ body {
 
 /* Leaflet dark theme overrides */
 .leaflet-container {
-  background: #040912 !important;
+  background: #111111 !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #070E1A !important;
-  border: 1px solid #1E3254 !important;
+  background: #1C1C1E !important;
+  border: 1px solid #3A3A3C !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
-  color: #D4E5FF !important;
+  color: #F4F4F5 !important;
 }
 
 .leaflet-popup-tip {
-  background: #070E1A !important;
+  background: #1C1C1E !important;
 }
 
 .leaflet-popup-content {
   margin: 12px 16px !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 12px !important;
-  color: #D4E5FF !important;
+  color: #F4F4F5 !important;
 }
 
 .leaflet-bar a {
-  background: #070E1A !important;
-  border: 1px solid #1E3254 !important;
-  color: #6B82A8 !important;
+  background: #1C1C1E !important;
+  border: 1px solid #3A3A3C !important;
+  color: #A1A1AA !important;
 }
 
 .leaflet-bar a:hover {
-  background: #0C1525 !important;
-  color: #D4E5FF !important;
+  background: #252528 !important;
+  color: #F4F4F5 !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(4, 9, 18, 0.8) !important;
-  color: #2D4060 !important;
+  background: rgba(17, 17, 17, 0.8) !important;
+  color: #636366 !important;
   font-size: 10px !important;
 }
 
 .leaflet-control-attribution a {
-  color: #2D4060 !important;
+  color: #636366 !important;
 }

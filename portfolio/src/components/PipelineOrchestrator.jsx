@@ -4,9 +4,9 @@ import { Play, CheckCircle, AlertCircle, Loader, ChevronRight, RotateCcw, ArrowR
 import { triggerRun, streamRun } from '../lib/api'
 
 const STAGES = [
-  { key: 'GENERATE', label: 'Generate', sub: 'Faker · 500 orders · 8k GPS pings', color: '#00C2FF', icon: '⚡' },
+  { key: 'GENERATE', label: 'Generate', sub: 'Faker · 500 orders · 8k GPS pings', color: '#F59E0B', icon: '⚡' },
   { key: 'BRONZE', label: 'Bronze', sub: 'Raw ingest → PostgreSQL', color: '#7C5CFC', icon: '🥉' },
-  { key: 'SILVER', label: 'Silver', sub: 'Data Vault 2.0 · Identity Resolution', color: '#00C2FF', icon: '🥈' },
+  { key: 'SILVER', label: 'Silver', sub: 'Data Vault 2.0 · Identity Resolution', color: '#F59E0B', icon: '🥈' },
   { key: 'GOLD', label: 'Gold', sub: 'Star Schema · 8 dims · 4 facts', color: '#FFB547', icon: '🥇' },
   { key: 'QUALITY', label: 'Quality', sub: 'Great Expectations · 35 assertions', color: '#00E5A0', icon: '✓' },
 ]
@@ -23,8 +23,8 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
           padding: '10px 12px',
           borderRadius: 8,
           transition: 'all 0.3s',
-          background: isActive ? 'rgba(0, 194, 255, 0.05)' : 'transparent',
-          border: `1px solid ${isActive ? 'rgba(0, 194, 255, 0.15)' : 'transparent'}`,
+          background: isActive ? 'rgba(245, 158, 11, 0.05)' : 'transparent',
+          border: `1px solid ${isActive ? 'rgba(245, 158, 11, 0.15)' : 'transparent'}`,
         }}
       >
         <div style={{ width: 24, height: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -33,7 +33,7 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
           ) : isActive ? (
             <Loader size={18} style={{ color }} className="animate-spin" />
           ) : (
-            <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #142038' }} />
+            <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #2C2C2E' }} />
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -41,17 +41,17 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
             fontSize: 13,
             fontWeight: 600,
             fontFamily: 'Inter, sans-serif',
-            color: isDone || isActive ? '#D4E5FF' : '#2D4060',
+            color: isDone || isActive ? '#F4F4F5' : '#636366',
             transition: 'color 0.3s',
           }}>
             {stage.icon} {stage.label}
           </div>
-          <div style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 10, color: '#636366', fontFamily: "'JetBrains Mono', monospace", marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {stage.sub}
           </div>
         </div>
         {isDone && stageData?.duration_s && (
-          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', flexShrink: 0 }}>
+          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366', flexShrink: 0 }}>
             {stageData.duration_s}s
           </span>
         )}
@@ -66,7 +66,7 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
             marginBottom: 2,
             borderRadius: 2,
             transition: 'all 0.5s',
-            background: isDone ? color : '#142038',
+            background: isDone ? color : '#2C2C2E',
             opacity: isDone ? 1 : 0.3,
           }}
         />
@@ -75,18 +75,18 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
   )
 }
 
-function MetricCard({ label, value, unit, color = '#00C2FF', delay = 0 }) {
+function MetricCard({ label, value, unit, color = '#F59E0B', delay = 0 }) {
   return (
     <div
       className="gk-card p-4 animate-count-up"
       style={{ animationDelay: `${delay}ms`, borderColor: `${color}30` }}
     >
-      <div style={{ fontSize: 10, color: '#6B82A8', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <div style={{ fontSize: 10, color: '#A1A1AA', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         {label}
       </div>
       <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'Inter, sans-serif', color }}>
         {typeof value === 'number' ? value.toLocaleString() : value}
-        {unit && <span style={{ fontSize: 12, color: '#6B82A8', marginLeft: 4 }}>{unit}</span>}
+        {unit && <span style={{ fontSize: 12, color: '#A1A1AA', marginLeft: 4 }}>{unit}</span>}
       </div>
     </div>
   )
@@ -103,7 +103,7 @@ function JsonFeed({ samples }) {
 
   const lines = items.flatMap((item, i) => {
     const json = JSON.stringify(item, null, 2)
-    return json.split('\n').map((line, j) => ({ line, color: i % 2 === 0 ? '#00C2FF' : '#7C5CFC', key: `${i}-${j}` }))
+    return json.split('\n').map((line, j) => ({ line, color: i % 2 === 0 ? '#F59E0B' : '#7C5CFC', key: `${i}-${j}` }))
   })
 
   const doubled = [...lines, ...lines]
@@ -117,7 +117,7 @@ function JsonFeed({ samples }) {
           </div>
         ))}
       </div>
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to top, #020609, transparent)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(to top, #0A0A0A, transparent)', pointerEvents: 'none' }} />
     </div>
   )
 }
@@ -126,13 +126,13 @@ function SubStageTable({ subStages }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {subStages?.map((s, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, padding: '6px 0', borderBottom: i < subStages.length - 1 ? '1px solid #142038' : 'none' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C2FF', flexShrink: 0 }} />
-          <span style={{ color: '#D4E5FF', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, flex: 1 }}>{s.name}</span>
-          <span style={{ color: '#2D4060', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, padding: '6px 0', borderBottom: i < subStages.length - 1 ? '1px solid #2C2C2E' : 'none' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', flexShrink: 0 }} />
+          <span style={{ color: '#F4F4F5', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, flex: 1 }}>{s.name}</span>
+          <span style={{ color: '#636366', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}>
             {s.in?.toLocaleString()} <ChevronRight size={9} style={{ display: 'inline' }} /> {s.out?.toLocaleString()}
           </span>
-          <span style={{ color: '#6B82A8', fontSize: 10, display: window.innerWidth > 640 ? 'block' : 'none' }}>{s.note}</span>
+          <span style={{ color: '#A1A1AA', fontSize: 10, display: window.innerWidth > 640 ? 'block' : 'none' }}>{s.note}</span>
         </div>
       ))}
     </div>
@@ -150,10 +150,10 @@ function QualityChecklist({ checks }) {
       {checks?.map((c, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", borderBottom: '1px solid rgba(20, 32, 56, 0.5)' }}>
           {statusIcon(c.status)}
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: c.status === 'pass' ? '#6B82A8' : '#D4E5FF' }}>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: c.status === 'pass' ? '#A1A1AA' : '#F4F4F5' }}>
             {c.name}
           </span>
-          <span style={{ color: '#2D4060' }}>{c.actual}</span>
+          <span style={{ color: '#636366' }}>{c.actual}</span>
         </div>
       ))}
     </div>
@@ -164,7 +164,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', background: 'rgba(4, 9, 18, 0.97)',
+      alignItems: 'center', justifyContent: 'center', background: 'rgba(17, 17, 17, 0.97)',
       zIndex: 10, borderRadius: 16,
     }} className="animate-fade-in">
       <div
@@ -179,13 +179,13 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
       >
         <CheckCircle size={36} style={{ color: '#00E5A0' }} />
       </div>
-      <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 28, fontWeight: 800, color: '#D4E5FF', marginBottom: 6 }}>
+      <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 28, fontWeight: 800, color: '#F4F4F5', marginBottom: 6 }}>
         Pipeline Complete
       </h2>
-      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', marginBottom: 6 }}>
+      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#A1A1AA', marginBottom: 6 }}>
         {duration}s · {stats?.ge_passed}/{stats?.ge_checks} DQ checks passed
       </p>
-      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', marginBottom: 28 }}>
+      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', marginBottom: 28 }}>
         {stats?.orders_normalised} orders unified · {stats?.identity_resolved} customers resolved · 24 PII fields masked
       </p>
 
@@ -199,10 +199,10 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           { label: 'DQ Passed', value: stats?.ge_passed },
         ].map((s) => (
           <div key={s.label} className="gk-card" style={{ padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Inter, sans-serif', color: '#00C2FF' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Inter, sans-serif', color: '#F59E0B' }}>
               {s.value?.toLocaleString()}
             </div>
-            <div style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: '#636366', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -212,7 +212,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           onClick={onViewDashboard}
           style={{
             padding: '12px 24px', borderRadius: 10, background: '#00E5A0',
-            color: '#040912', fontWeight: 700, fontSize: 13, fontFamily: 'Inter, sans-serif',
+            color: '#111111', fontWeight: 700, fontSize: 13, fontFamily: 'Inter, sans-serif',
             border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
             transition: 'opacity 0.2s',
           }}
@@ -225,13 +225,13 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           onClick={onRunAgain}
           style={{
             padding: '12px 24px', borderRadius: 10,
-            border: '1px solid #1E3254', background: 'transparent',
-            color: '#6B82A8', fontSize: 13, fontFamily: 'Inter, sans-serif', fontWeight: 500,
+            border: '1px solid #3A3A3C', background: 'transparent',
+            color: '#A1A1AA', fontSize: 13, fontFamily: 'Inter, sans-serif', fontWeight: 500,
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
             transition: 'all 0.2s',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#D4E5FF'; e.currentTarget.style.borderColor = '#6B82A8' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#6B82A8'; e.currentTarget.style.borderColor = '#1E3254' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#F4F4F5'; e.currentTarget.style.borderColor = '#A1A1AA' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#A1A1AA'; e.currentTarget.style.borderColor = '#3A3A3C' }}
         >
           <RotateCcw size={13} /> Run Again
         </button>
@@ -256,7 +256,7 @@ export default function PipelineOrchestrator() {
     setPhase(p)
   }, [])
 
-  const addTerminalLine = useCallback((line, color = '#6B82A8') => {
+  const addTerminalLine = useCallback((line, color = '#A1A1AA') => {
     setTerminalLines((prev) => [...prev.slice(-80), { line, color, id: Date.now() + Math.random() }])
     setTimeout(() => {
       if (terminalRef.current) {
@@ -270,8 +270,8 @@ export default function PipelineOrchestrator() {
     setStageEvents({})
     setActiveStage('GENERATE')
     setTerminalLines([])
-    addTerminalLine('$ ghostkitchen run-pipeline --env production', '#00C2FF')
-    addTerminalLine('Connecting to Railway PostgreSQL ...', '#2D4060')
+    addTerminalLine('$ ghostkitchen run-pipeline --env production', '#F59E0B')
+    addTerminalLine('Connecting to Railway PostgreSQL ...', '#636366')
 
     try {
       const { run_id } = await triggerRun()
@@ -296,12 +296,12 @@ export default function PipelineOrchestrator() {
           setStageEvents((prev) => ({ ...prev, [event.stage]: event }))
 
           if (event.logs?.length) {
-            event.logs.forEach((l) => addTerminalLine(`  ${l}`, '#6B82A8'))
+            event.logs.forEach((l) => addTerminalLine(`  ${l}`, '#A1A1AA'))
           }
           if (event.status === 'done') {
             addTerminalLine(
               `✓ ${event.stage} complete (${event.duration_s}s)`,
-              event.stage === 'GOLD' ? '#FFB547' : '#00C2FF'
+              event.stage === 'GOLD' ? '#FFB547' : '#F59E0B'
             )
           }
         },
@@ -333,7 +333,7 @@ export default function PipelineOrchestrator() {
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
         justifyContent: 'center', pointerEvents: 'none',
       }}>
-        <div style={{ width: 600, height: 600, borderRadius: '50%', background: 'rgba(0, 194, 255, 0.04)', filter: 'blur(80px)' }} />
+        <div style={{ width: 600, height: 600, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.04)', filter: 'blur(80px)' }} />
       </div>
 
       {/* IDLE */}
@@ -359,24 +359,24 @@ export default function PipelineOrchestrator() {
           </div>
 
           {/* Problem framing */}
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#4A4A5A', textAlign: 'center', marginBottom: 2 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#636366', textAlign: 'center', marginBottom: 2 }}>
             50 ghost kitchens. 3 delivery platforms.
           </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#6B82A8', textAlign: 'center', marginBottom: 20, maxWidth: 480 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#A1A1AA', textAlign: 'center', marginBottom: 20, maxWidth: 480 }}>
             $0 data trust between them. This pipeline fixes that.
           </p>
 
           <h1 style={{
             fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 'clamp(40px, 7vw, 68px)',
-            color: '#D4E5FF', textAlign: 'center', lineHeight: 1.05, marginBottom: 12,
+            color: '#F4F4F5', textAlign: 'center', lineHeight: 1.05, marginBottom: 12,
           }}>
             Pipeline<br />
-            <span style={{ color: '#00C2FF' }}>Orchestrator</span>
+            <span style={{ color: '#F59E0B' }}>Orchestrator</span>
           </h1>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', textAlign: 'center', marginBottom: 6, maxWidth: 480 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#A1A1AA', textAlign: 'center', marginBottom: 6, maxWidth: 480 }}>
             Bronze → Silver → Gold · Data Vault 2.0 · Star Schema · Identity Resolution
           </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 20, maxWidth: 520 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#636366', textAlign: 'center', marginBottom: 20, maxWidth: 520 }}>
             Modelled on the Texas ghost kitchen market — 50 virtual dark kitchens across Houston, Dallas, Austin and 7 other TX cities
           </p>
 
@@ -388,17 +388,17 @@ export default function PipelineOrchestrator() {
               textAlign: 'left',
             }}>
               <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#FFB547', marginBottom: 4 }}>⚖ Lambda over Kappa</p>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', lineHeight: 1.6 }}>
                 Order corrections need batch reprocessing — Kappa can't replay state machines retroactively.
               </p>
             </div>
             <div style={{
               flex: 1, padding: '10px 14px', borderRadius: 10,
-              border: '1px solid rgba(0, 194, 255, 0.2)', background: 'rgba(0, 194, 255, 0.04)',
+              border: '1px solid rgba(245, 158, 11, 0.2)', background: 'rgba(245, 158, 11, 0.04)',
               textAlign: 'left',
             }}>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#00C2FF', marginBottom: 4 }}>⏱ Late-Arriving Data</p>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#F59E0B', marginBottom: 4 }}>⏱ Late-Arriving Data</p>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', lineHeight: 1.6 }}>
                 24h watermark · events accepted up to 24h late · Airflow reconciliation DAG at 02:00 UTC
               </p>
             </div>
@@ -407,18 +407,18 @@ export default function PipelineOrchestrator() {
           {/* Lambda architecture diagram */}
           <div style={{
             marginBottom: 28, maxWidth: 560, width: '100%',
-            border: '1px solid #142038', borderRadius: 12, overflow: 'hidden',
+            border: '1px solid #2C2C2E', borderRadius: 12, overflow: 'hidden',
           }}>
             <div style={{
-              background: '#070E1A', padding: '8px 14px', borderBottom: '1px solid #142038',
-              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060',
+              background: '#1C1C1E', padding: '8px 14px', borderBottom: '1px solid #2C2C2E',
+              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366',
               textTransform: 'uppercase', letterSpacing: '0.08em',
             }}>
               Lambda Architecture — Dual Path
             </div>
-            <div style={{ display: 'flex', background: '#040912' }}>
+            <div style={{ display: 'flex', background: '#111111' }}>
               {/* Speed layer */}
-              <div style={{ flex: 1, padding: '12px', borderRight: '1px solid #142038' }}>
+              <div style={{ flex: 1, padding: '12px', borderRight: '1px solid #2C2C2E' }}>
                 <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#E8601C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   ⚡ Speed Layer
                 </div>
@@ -434,9 +434,9 @@ export default function PipelineOrchestrator() {
                       fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: item.color,
                     }}>
                       {item.label}
-                      {item.sub && <span style={{ color: '#4A4A5A', marginLeft: 6 }}>{item.sub}</span>}
+                      {item.sub && <span style={{ color: '#636366', marginLeft: 6 }}>{item.sub}</span>}
                     </div>
-                    {i < 2 && <div style={{ fontSize: 10, color: '#2D4060', textAlign: 'center', marginBottom: 2 }}>↓</div>}
+                    {i < 2 && <div style={{ fontSize: 10, color: '#636366', textAlign: 'center', marginBottom: 2 }}>↓</div>}
                   </div>
                 ))}
               </div>
@@ -457,17 +457,17 @@ export default function PipelineOrchestrator() {
                       fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: item.color,
                     }}>
                       {item.label}
-                      {item.sub && <span style={{ color: '#4A4A5A', marginLeft: 6 }}>{item.sub}</span>}
+                      {item.sub && <span style={{ color: '#636366', marginLeft: 6 }}>{item.sub}</span>}
                     </div>
-                    {i < 2 && <div style={{ fontSize: 10, color: '#2D4060', textAlign: 'center', marginBottom: 2 }}>↓</div>}
+                    {i < 2 && <div style={{ fontSize: 10, color: '#636366', textAlign: 'center', marginBottom: 2 }}>↓</div>}
                   </div>
                 ))}
               </div>
             </div>
             {/* Serving layer */}
             <div style={{
-              padding: '7px 14px', borderTop: '1px solid #142038', background: '#070E1A',
-              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', textAlign: 'center',
+              padding: '7px 14px', borderTop: '1px solid #2C2C2E', background: '#1C1C1E',
+              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366', textAlign: 'center',
             }}>
               Serving Layer · PostgreSQL · Star Schema · 12 Gold tables
             </div>
@@ -482,8 +482,8 @@ export default function PipelineOrchestrator() {
               { v: '12', l: 'Gold tables' },
             ].map(({ v, l }) => (
               <div key={l} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 24, fontWeight: 800, color: '#00C2FF' }}>{v}</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>{l}</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 24, fontWeight: 800, color: '#F59E0B' }}>{v}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>{l}</div>
               </div>
             ))}
           </div>
@@ -493,7 +493,7 @@ export default function PipelineOrchestrator() {
             className="animate-pulse-glow"
             style={{
               padding: '16px 40px', borderRadius: 14,
-              background: '#00C2FF', color: '#040912',
+              background: '#F59E0B', color: '#111111',
               fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 16,
               border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 10,
@@ -505,7 +505,7 @@ export default function PipelineOrchestrator() {
           >
             <Play size={20} /> RUN PIPELINE
           </button>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 12 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#636366', textAlign: 'center', marginBottom: 12 }}>
             ~60 seconds · results live for 48h · writes real rows to PostgreSQL
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
@@ -513,7 +513,7 @@ export default function PipelineOrchestrator() {
               <span key={t} style={{
                 padding: '3px 10px', borderRadius: 20, fontSize: 10,
                 fontFamily: "'JetBrains Mono', monospace",
-                border: '1px solid #142038', color: '#2D4060', background: '#070E1A',
+                border: '1px solid #2C2C2E', color: '#636366', background: '#1C1C1E',
               }}>{t}</span>
             ))}
           </div>
@@ -536,7 +536,7 @@ export default function PipelineOrchestrator() {
             {/* LEFT: Stage sidebar */}
             <div style={{ width: 220, flexShrink: 0 }}>
               <div className="gk-card" style={{ padding: 12, height: '100%' }}>
-                <div style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+                <div style={{ fontSize: 10, color: '#636366', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
                   Pipeline Stages
                 </div>
                 {STAGES.map((stage, i) => (
@@ -567,11 +567,11 @@ export default function PipelineOrchestrator() {
                             <span style={{ fontSize: 20 }}>{s?.icon}</span>
                             <div>
                               <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 700, color: s?.color }}>{s?.label}</h3>
-                              <p style={{ fontSize: 10, color: '#6B82A8', fontFamily: "'JetBrains Mono', monospace" }}>{s?.sub}</p>
+                              <p style={{ fontSize: 10, color: '#A1A1AA', fontFamily: "'JetBrains Mono', monospace" }}>{s?.sub}</p>
                             </div>
                           </div>
                           {e?.status === 'running' && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#6B82A8', fontFamily: "'JetBrains Mono', monospace" }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#A1A1AA', fontFamily: "'JetBrains Mono', monospace" }}>
                               <Loader size={11} className="animate-spin" style={{ color: s?.color }} />
                               processing...
                             </div>
@@ -592,7 +592,7 @@ export default function PipelineOrchestrator() {
                               <div className="terminal-dot" style={{ background: '#FF3D57' }} />
                               <div className="terminal-dot" style={{ background: '#FFB547' }} />
                               <div className="terminal-dot" style={{ background: '#00E5A0' }} />
-                              <span style={{ fontSize: 10, color: '#2D4060', marginLeft: 8 }}>kafka events preview</span>
+                              <span style={{ fontSize: 10, color: '#636366', marginLeft: 8 }}>kafka events preview</span>
                             </div>
                             <div className="terminal-body" style={{ height: 88 }}>
                               <JsonFeed samples={e.sample_json} />
@@ -619,7 +619,7 @@ export default function PipelineOrchestrator() {
                   <div className="terminal-dot" style={{ background: '#FF3D57' }} />
                   <div className="terminal-dot" style={{ background: '#FFB547' }} />
                   <div className="terminal-dot" style={{ background: '#00E5A0' }} />
-                  <span style={{ fontSize: 10, color: '#2D4060', marginLeft: 8 }}>ghostkitchen.railway.app — pipeline.log</span>
+                  <span style={{ fontSize: 10, color: '#636366', marginLeft: 8 }}>ghostkitchen.railway.app — pipeline.log</span>
                 </div>
                 <div className="terminal-body" style={{ flex: 1, overflowY: 'auto' }} ref={terminalRef}>
                   {terminalLines.map(({ line, color, id }) => (
@@ -627,7 +627,7 @@ export default function PipelineOrchestrator() {
                       {line}
                     </div>
                   ))}
-                  <span className="animate-blink" style={{ color: '#00C2FF' }}>█</span>
+                  <span className="animate-blink" style={{ color: '#F59E0B' }}>█</span>
                 </div>
               </div>
             </div>

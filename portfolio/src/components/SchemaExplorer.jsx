@@ -21,7 +21,7 @@ function FactNode({ data, selected }) {
           ? 'border-[#FFB547] shadow-[0_0_30px_rgba(255,181,71,0.5)]'
           : 'border-[#FFB54770] shadow-[0_0_15px_rgba(255,181,71,0.2)]'
       }`}
-      style={{ background: '#0C1525', minWidth: 180 }}
+      style={{ background: '#252528', minWidth: 180 }}
     >
       <Handle type="target" position={Position.Top} style={{ background: '#FFB547', border: 'none', width: 8, height: 8 }} />
       <Handle type="target" position={Position.Bottom} style={{ background: '#FFB547', border: 'none', width: 8, height: 8 }} />
@@ -31,7 +31,7 @@ function FactNode({ data, selected }) {
         <span className="text-[8px] font-mono text-[#FFB547] font-bold tracking-widest uppercase bg-[#FFB54715] border border-[#FFB54730] px-2 py-0.5 rounded">
           FACT TABLE
         </span>
-        <span className="text-[8px] text-[#2D4060] font-mono">{data.rowCount}</span>
+        <span className="text-[8px] text-[#636366] font-mono">{data.rowCount}</span>
       </div>
       <div className="text-sm font-bold text-[#FFB547] font-mono">{data.label}</div>
     </div>
@@ -44,31 +44,31 @@ function DimNode({ data, selected }) {
     <div
       className={`rounded-xl border cursor-pointer transition-all duration-200 px-3 py-2 ${
         selected
-          ? 'border-[#00C2FF] shadow-[0_0_24px_rgba(0,194,255,0.5)]'
-          : 'border-[#00C2FF40] shadow-[0_0_10px_rgba(0,194,255,0.1)]'
+          ? 'border-[#F59E0B] shadow-[0_0_24px_rgba(245, 158, 11,0.5)]'
+          : 'border-[#F59E0B40] shadow-[0_0_10px_rgba(245, 158, 11,0.1)]'
       }`}
-      style={{ background: '#0C1525', minWidth: 140 }}
+      style={{ background: '#252528', minWidth: 140 }}
     >
-      <Handle type="source" position={Position.Bottom} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
-      <Handle type="source" position={Position.Top} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
-      <Handle type="source" position={Position.Left} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
-      <Handle type="target" position={Position.Bottom} id="t-b" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
-      <Handle type="target" position={Position.Top} id="t-t" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
-      <Handle type="target" position={Position.Left} id="t-l" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
-      <Handle type="target" position={Position.Right} id="t-r" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: '#F59E0B', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Top} style={{ background: '#F59E0B', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Left} style={{ background: '#F59E0B', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#F59E0B', border: 'none', width: 6, height: 6 }} />
+      <Handle type="target" position={Position.Bottom} id="t-b" style={{ background: '#F59E0B', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Top} id="t-t" style={{ background: '#F59E0B', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Left} id="t-l" style={{ background: '#F59E0B', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Right} id="t-r" style={{ background: '#F59E0B', border: 'none', width: 6, height: 6, opacity: 0 }} />
       <div className="flex items-center justify-between mb-0.5">
-        <span className="text-[8px] font-mono text-[#00C2FF] font-bold tracking-widest uppercase bg-[#00C2FF10] border border-[#00C2FF20] px-1.5 py-0.5 rounded">
+        <span className="text-[8px] font-mono text-[#F59E0B] font-bold tracking-widest uppercase bg-[#F59E0B10] border border-[#F59E0B20] px-1.5 py-0.5 rounded">
           DIM
         </span>
         {data.scdType && (
-          <span className="text-[8px] font-mono text-[#2D4060] border border-[#142038] px-1.5 py-0.5 rounded">
+          <span className="text-[8px] font-mono text-[#636366] border border-[#2C2C2E] px-1.5 py-0.5 rounded">
             {data.scdType}
           </span>
         )}
       </div>
-      <div className="text-xs font-bold text-[#00C2FF] font-mono">{data.label}</div>
-      <div className="text-[9px] text-[#2D4060] mt-0.5">{data.rowCount} rows</div>
+      <div className="text-xs font-bold text-[#F59E0B] font-mono">{data.label}</div>
+      <div className="text-[9px] text-[#636366] mt-0.5">{data.rowCount} rows</div>
     </div>
   )
 }
@@ -82,7 +82,7 @@ function SilverNode({ data, selected }) {
           ? 'border-[#7C5CFC] shadow-[0_0_24px_rgba(124,92,252,0.5)]'
           : 'border-[#7C5CFC40] shadow-[0_0_10px_rgba(124,92,252,0.1)]'
       }`}
-      style={{ background: '#0C1525', minWidth: 140 }}
+      style={{ background: '#252528', minWidth: 140 }}
     >
       <Handle type="source" position={Position.Bottom} style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6 }} />
       <Handle type="source" position={Position.Top} style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6 }} />
@@ -98,7 +98,7 @@ function SilverNode({ data, selected }) {
         </span>
       </div>
       <div className="text-xs font-bold text-[#7C5CFC] font-mono">{data.label}</div>
-      <div className="text-[9px] text-[#2D4060] mt-0.5">{data.rowCount} rows</div>
+      <div className="text-[9px] text-[#636366] mt-0.5">{data.rowCount} rows</div>
     </div>
   )
 }
@@ -116,7 +116,7 @@ function getLayerFilter(node, filter) {
 }
 
 const edgeStyle = {
-  stroke: '#00C2FF',
+  stroke: '#F59E0B',
   strokeWidth: 2,
   strokeDasharray: '6 3',
 }
@@ -128,12 +128,12 @@ function SchemaPanel({ node, onClose }) {
 
   const isFact = node.type === 'factNode'
   const isSilver = node.type === 'silverNode'
-  const color = isFact ? '#FFB547' : isSilver ? '#7C5CFC' : '#00C2FF'
+  const color = isFact ? '#FFB547' : isSilver ? '#7C5CFC' : '#F59E0B'
 
   const roleIcon = (role) => {
     if (role === 'pk') return <Key size={10} className="text-[#FFB547]" />
     if (role === 'fk') return <Link size={10} className="text-[#7C5CFC]" />
-    return <Columns size={10} className="text-[#2D4060]" />
+    return <Columns size={10} className="text-[#636366]" />
   }
 
   return (
@@ -146,7 +146,7 @@ function SchemaPanel({ node, onClose }) {
       style={{ borderColor: `${color}40` }}
     >
       {/* Header */}
-      <div className="p-4 border-b border-[#142038]" style={{ background: `${color}08` }}>
+      <div className="p-4 border-b border-[#2C2C2E]" style={{ background: `${color}08` }}>
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -157,23 +157,23 @@ function SchemaPanel({ node, onClose }) {
                 {isFact ? 'FACT TABLE' : isSilver ? 'VAULT' : 'DIMENSION'}
               </span>
               {d.scdType && (
-                <span className="text-[10px] font-mono text-[#2D4060] border border-[#142038] px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-[#636366] border border-[#2C2C2E] px-2 py-0.5 rounded">
                   {d.scdType}
                 </span>
               )}
             </div>
             <h3 className="text-base font-bold font-mono" style={{ color }}>{d.label}</h3>
-            <p className="text-xs text-[#6B82A8] mt-1 leading-relaxed">{d.description}</p>
+            <p className="text-xs text-[#A1A1AA] mt-1 leading-relaxed">{d.description}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-[#2D4060] hover:text-[#D4E5FF] transition-colors ml-2 flex-shrink-0"
+            className="text-[#636366] hover:text-[#F4F4F5] transition-colors ml-2 flex-shrink-0"
           >
             <X size={16} />
           </button>
         </div>
         {d.joinKey && (
-          <div className="mt-2 text-[10px] font-mono text-[#2D4060] bg-[#142038] px-3 py-1.5 rounded-lg">
+          <div className="mt-2 text-[10px] font-mono text-[#636366] bg-[#2C2C2E] px-3 py-1.5 rounded-lg">
             🔗 {d.joinKey}
           </div>
         )}
@@ -181,32 +181,32 @@ function SchemaPanel({ node, onClose }) {
 
       {/* Columns */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="text-[10px] text-[#2D4060] font-mono uppercase tracking-wider mb-3">Columns</div>
+        <div className="text-[10px] text-[#636366] font-mono uppercase tracking-wider mb-3">Columns</div>
         <div className="space-y-1 mb-5">
           {d.columns?.map((col) => (
-            <div key={col.name} className="flex items-center gap-2 py-1.5 border-b border-[#14203810]">
+            <div key={col.name} className="flex items-center gap-2 py-1.5 border-b border-[#2C2C2E10]">
               {roleIcon(col.role)}
               <span className={`text-xs font-mono flex-1 ${
                 col.role === 'pk' ? 'text-[#FFB547]' :
-                col.role === 'fk' ? 'text-[#7C5CFC]' : 'text-[#D4E5FF]'
+                col.role === 'fk' ? 'text-[#7C5CFC]' : 'text-[#F4F4F5]'
               }`}>
                 {col.name}
               </span>
-              <span className="text-[10px] text-[#2D4060] font-mono">{col.type}</span>
+              <span className="text-[10px] text-[#636366] font-mono">{col.type}</span>
             </div>
           ))}
         </div>
 
         {d.sampleRows && (
           <>
-            <div className="text-[10px] text-[#2D4060] font-mono uppercase tracking-wider mb-2">Sample Rows</div>
-            <div className="rounded-lg overflow-hidden border border-[#142038] font-mono text-[10px]">
+            <div className="text-[10px] text-[#636366] font-mono uppercase tracking-wider mb-2">Sample Rows</div>
+            <div className="rounded-lg overflow-hidden border border-[#2C2C2E] font-mono text-[10px]">
               {d.sampleRows.map((row, i) => (
-                <div key={i} className="px-3 py-2 border-b border-[#142038] last:border-0" style={{ background: i % 2 ? '#040912' : '#070E1A' }}>
+                <div key={i} className="px-3 py-2 border-b border-[#2C2C2E] last:border-0" style={{ background: i % 2 ? '#111111' : '#1C1C1E' }}>
                   {Object.entries(row).map(([k, v]) => (
                     <span key={k} className="mr-3">
-                      <span className="text-[#2D4060]">{k}:</span>
-                      <span className={typeof v === 'boolean' ? (v ? 'text-[#00E5A0]' : 'text-[#FF3D57]') : 'text-[#D4E5FF]'}>
+                      <span className="text-[#636366]">{k}:</span>
+                      <span className={typeof v === 'boolean' ? (v ? 'text-[#00E5A0]' : 'text-[#FF3D57]') : 'text-[#F4F4F5]'}>
                         {' '}{String(v)}
                       </span>
                     </span>
@@ -224,7 +224,7 @@ function SchemaPanel({ node, onClose }) {
 // ── Identity resolution visualizer ───────────────────────────────────────────
 const RAW_RECORDS = [
   { platform: 'DoorDash', email: 'Sarah.J@Gmail.com', order_id: 'DD-8821', platform_color: '#FF3D57' },
-  { platform: 'Uber Eats', email: 'sarah.j@gmail.com', order_id: 'UE-4492', platform_color: '#00C2FF' },
+  { platform: 'Uber Eats', email: 'sarah.j@gmail.com', order_id: 'UE-4492', platform_color: '#F59E0B' },
   { platform: 'OwnApp', email: 'SARAH.J@GMAIL.COM', order_id: 'OA-1103', platform_color: '#00E5A0' },
 ]
 
@@ -232,13 +232,13 @@ function IdentityVisualizer() {
   const mono = { fontFamily: "'JetBrains Mono', monospace" }
   return (
     <div style={{ padding: '20px 24px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ fontSize: 11, ...mono, color: '#2D4060' }}>
+      <div style={{ fontSize: 11, ...mono, color: '#636366' }}>
         Same customer, 3 platforms, 3 email formats → 1 unified identity
       </div>
 
       {/* Step 1: Raw records */}
       <div>
-        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>① Raw ingestion (Bronze)</div>
+        <div style={{ fontSize: 9, ...mono, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>① Raw ingestion (Bronze)</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {RAW_RECORDS.map((r) => (
             <div key={r.platform} style={{
@@ -246,39 +246,39 @@ function IdentityVisualizer() {
               border: `1px solid ${r.platform_color}30`, background: `${r.platform_color}08`,
             }}>
               <div style={{ fontSize: 9, ...mono, color: r.platform_color, marginBottom: 4 }}>{r.platform}</div>
-              <div style={{ fontSize: 9, ...mono, color: '#6B82A8' }}>{r.email}</div>
-              <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 2 }}>{r.order_id}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#A1A1AA' }}>{r.email}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#636366', marginTop: 2 }}>{r.order_id}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Arrow */}
-      <div style={{ textAlign: 'center', fontSize: 12, color: '#2D4060', ...mono }}>↓ normalize + MD5 hash</div>
+      <div style={{ textAlign: 'center', fontSize: 12, color: '#636366', ...mono }}>↓ normalize + MD5 hash</div>
 
       {/* Step 2: Normalized */}
       <div>
-        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>② Normalized email hash (Silver)</div>
+        <div style={{ fontSize: 9, ...mono, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>② Normalized email hash (Silver)</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {RAW_RECORDS.map((r) => (
             <div key={r.platform} style={{
               flex: 1, padding: '8px 10px', borderRadius: 8,
-              border: '1px solid #142038', background: '#070E1A',
+              border: '1px solid #2C2C2E', background: '#1C1C1E',
             }}>
-              <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', marginBottom: 4 }}>{r.platform}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#636366', marginBottom: 4 }}>{r.platform}</div>
               <div style={{ fontSize: 9, ...mono, color: '#7C5CFC' }}>sarah.j@gmail.com</div>
-              <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 2 }}>md5: a3f9…c21e</div>
+              <div style={{ fontSize: 9, ...mono, color: '#636366', marginTop: 2 }}>md5: a3f9…c21e</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Arrow */}
-      <div style={{ textAlign: 'center', fontSize: 12, color: '#2D4060', ...mono }}>↓ group by email_hash → assign customer_key</div>
+      <div style={{ textAlign: 'center', fontSize: 12, color: '#636366', ...mono }}>↓ group by email_hash → assign customer_key</div>
 
       {/* Step 3: Resolved */}
       <div>
-        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>③ Unified identity (Gold)</div>
+        <div style={{ fontSize: 9, ...mono, color: '#636366', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>③ Unified identity (Gold)</div>
         <div style={{
           padding: '12px 14px', borderRadius: 10,
           border: '2px solid #00E5A040', background: '#00E5A008',
@@ -286,8 +286,8 @@ function IdentityVisualizer() {
         }}>
           <div>
             <div style={{ fontSize: 9, ...mono, color: '#00E5A0', marginBottom: 4 }}>dim_customer</div>
-            <div style={{ fontSize: 11, ...mono, color: '#D4E5FF', fontWeight: 700 }}>customer_key: ck_a3f9c21e</div>
-            <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 4 }}>platforms: DoorDash · Uber Eats · OwnApp</div>
+            <div style={{ fontSize: 11, ...mono, color: '#F4F4F5', fontWeight: 700 }}>customer_key: ck_a3f9c21e</div>
+            <div style={{ fontSize: 9, ...mono, color: '#636366', marginTop: 4 }}>platforms: DoorDash · Uber Eats · OwnApp</div>
           </div>
           <div style={{
             padding: '4px 10px', borderRadius: 6,
@@ -299,7 +299,7 @@ function IdentityVisualizer() {
         </div>
       </div>
 
-      <div style={{ fontSize: 9, ...mono, color: '#2D4060', borderTop: '1px solid #142038', paddingTop: 12 }}>
+      <div style={{ fontSize: 9, ...mono, color: '#636366', borderTop: '1px solid #2C2C2E', paddingTop: 12 }}>
         PII rule: raw email stored in Silver only · MD5 hash propagated to Gold · GDPR-compliant delete via hub key
       </div>
     </div>
@@ -323,7 +323,7 @@ export default function SchemaExplorer() {
   const styledEdges = filteredEdges.map((e) => ({
     ...e,
     style: edgeStyle,
-    markerEnd: { type: 'arrowclosed', color: '#00C2FF', width: 12, height: 12 },
+    markerEnd: { type: 'arrowclosed', color: '#F59E0B', width: 12, height: 12 },
   }))
 
   return (
@@ -334,12 +334,12 @@ export default function SchemaExplorer() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '3px 10px', borderRadius: 20,
-            border: '1px solid #142038', marginBottom: 4,
-            fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060',
+            border: '1px solid #2C2C2E', marginBottom: 4,
+            fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366',
           }}>
             Star Schema · Data Vault 2.0 · SCD Types 0/1/2
           </div>
-          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF' }}>
+          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#F4F4F5' }}>
             Schema Explorer
           </h2>
         </div>
@@ -355,9 +355,9 @@ export default function SchemaExplorer() {
                 padding: '5px 12px', borderRadius: 6, fontSize: 11,
                 fontFamily: 'Inter, sans-serif', fontWeight: 600,
                 border: '1px solid',
-                borderColor: view === v ? '#7C5CFC60' : '#142038',
+                borderColor: view === v ? '#7C5CFC60' : '#2C2C2E',
                 background: view === v ? '#7C5CFC15' : 'transparent',
-                color: view === v ? '#7C5CFC' : '#2D4060',
+                color: view === v ? '#7C5CFC' : '#636366',
                 cursor: 'pointer', transition: 'all 0.15s',
               }}
             >
@@ -366,7 +366,7 @@ export default function SchemaExplorer() {
           ))}
           {view === 'schema' && (
             <>
-              <div style={{ width: 1, height: 16, background: '#142038' }} />
+              <div style={{ width: 1, height: 16, background: '#2C2C2E' }} />
               {LAYER_FILTERS.map((f) => (
                 <button
                   key={f}
@@ -375,9 +375,9 @@ export default function SchemaExplorer() {
                     padding: '5px 12px', borderRadius: 6, fontSize: 11,
                     fontFamily: 'Inter, sans-serif', fontWeight: 500,
                     border: '1px solid',
-                    borderColor: layerFilter === f ? '#1E3254' : '#142038',
-                    background: layerFilter === f ? '#0C1525' : 'transparent',
-                    color: layerFilter === f ? '#D4E5FF' : '#2D4060',
+                    borderColor: layerFilter === f ? '#3A3A3C' : '#2C2C2E',
+                    background: layerFilter === f ? '#252528' : 'transparent',
+                    color: layerFilter === f ? '#F4F4F5' : '#636366',
                     cursor: 'pointer', transition: 'all 0.15s',
                   }}
                 >
@@ -390,7 +390,7 @@ export default function SchemaExplorer() {
       </div>
 
       {/* Flow container */}
-      <div style={{ flex: 1, position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid #142038', minHeight: 0, background: '#040912' }}>
+      <div style={{ flex: 1, position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid #2C2C2E', minHeight: 0, background: '#111111' }}>
         {view === 'identity' && <IdentityVisualizer />}
         {view === 'schema' && (<>
         <ReactFlow
@@ -409,11 +409,11 @@ export default function SchemaExplorer() {
           panOnDrag
           zoomOnScroll
         >
-          <Background color="#142038" gap={28} size={1} />
+          <Background color="#2C2C2E" gap={28} size={1} />
           <Controls />
           <MiniMap
-            nodeColor={(n) => (n.type === 'factNode' ? '#FFB547' : n.type === 'silverNode' ? '#7C5CFC' : '#00C2FF')}
-            maskColor="rgba(4,9,18,0.7)"
+            nodeColor={(n) => (n.type === 'factNode' ? '#FFB547' : n.type === 'silverNode' ? '#7C5CFC' : '#F59E0B')}
+            maskColor="rgba(17, 17, 17,0.7)"
           />
         </ReactFlow>
 
@@ -428,8 +428,8 @@ export default function SchemaExplorer() {
         {!selectedNode && (
           <div style={{
             position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)',
-            fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060',
-            background: '#070E1A', border: '1px solid #142038',
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#636366',
+            background: '#1C1C1E', border: '1px solid #2C2C2E',
             padding: '5px 12px', borderRadius: 20, pointerEvents: 'none', whiteSpace: 'nowrap',
           }}>
             Click any node to inspect schema
@@ -442,16 +442,16 @@ export default function SchemaExplorer() {
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20, flexShrink: 0, paddingBottom: 4 }}>
         {[
           { color: '#FFB547', label: 'Fact Table (grain: 1 order)', type: 'box' },
-          { color: '#00C2FF', label: 'Dimension', type: 'box' },
+          { color: '#F59E0B', label: 'Dimension', type: 'box' },
           { color: '#7C5CFC', label: 'Data Vault', type: 'box' },
         ].map(({ color, label }) => (
-          <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060' }}>
+          <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366' }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, border: `1px solid ${color}`, background: `${color}15` }} />
             {label}
           </span>
         ))}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060' }}>
-          <span style={{ width: 12, height: 0, borderTop: '2px dashed #00C2FF' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#636366' }}>
+          <span style={{ width: 12, height: 0, borderTop: '2px dashed #F59E0B' }} />
           Foreign key join
         </span>
       </div>
