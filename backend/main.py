@@ -484,16 +484,22 @@ async def kitchen_capacity():
     pool = await get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch("""
+            WITH kitchen_orders AS (
+                SELECT fo.kitchen_key, COUNT(*) AS order_count
+                FROM fact_order fo
+                GROUP BY fo.kitchen_key
+            ),
+            peak AS (
+                SELECT MAX(order_count) AS max_count FROM kitchen_orders
+            )
             SELECT dk.kitchen_id, dk.city,
-                   COUNT(fo.order_key) AS order_count,
+                   ko.order_count,
                    dk.capacity_per_hour,
                    ROUND(
-                       (COUNT(fo.order_key)::numeric /
-                        NULLIF(dk.capacity_per_hour * 24, 0)) * 100, 1
+                       ko.order_count::numeric / NULLIF((SELECT max_count FROM peak), 0) * 100, 1
                    ) AS utilization_pct
-            FROM fact_order fo
-            JOIN dim_kitchen dk ON fo.kitchen_key = dk.kitchen_key
-            GROUP BY dk.kitchen_id, dk.city, dk.capacity_per_hour
+            FROM kitchen_orders ko
+            JOIN dim_kitchen dk ON ko.kitchen_key = dk.kitchen_key
             ORDER BY utilization_pct DESC
             LIMIT 20
         """)

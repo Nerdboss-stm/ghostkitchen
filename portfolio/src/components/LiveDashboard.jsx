@@ -115,7 +115,14 @@ function PlatformDonut({ data }) {
 }
 
 function DeliveryBar({ data }) {
-  if (!data?.length) return <EmptyState />
+  if (!data?.length) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, gap: 8 }}>
+      <div style={{ fontSize: 28 }}>🗺️</div>
+      <p style={{ color: '#2D4060', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textAlign: 'center' }}>
+        Run the pipeline to populate<br />delivery trip data
+      </p>
+    </div>
+  )
   const sorted = [...data].sort((a, b) => Number(a.avg_duration_min) - Number(b.avg_duration_min)).slice(0, 10)
   const barColor = (v) => {
     const n = Number(v)
@@ -125,12 +132,18 @@ function DeliveryBar({ data }) {
   }
   return (
     <ResponsiveContainer width="100%" height={220} style={CHART_STYLE}>
-      <BarChart data={sorted} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+      <BarChart data={sorted} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke={GRID_COLOR} />
-        <XAxis dataKey="zone_id" tick={{ ...AXIS_TICK, fontSize: 9 }} tickLine={false} axisLine={false} />
-        <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v} min`, 'Avg duration']} />
-        <ReferenceLine y={45} stroke="#FF3D57" strokeDasharray="4 2" label={{ value: 'SLA 45m', fill: '#FF3D57', fontSize: 9 }} />
+        <XAxis dataKey="zone_id" tick={{ ...AXIS_TICK, fontSize: 8 }} tickLine={false} axisLine={false} />
+        <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} unit="m" />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(v, _, props) => [
+            `${v} min · ${props.payload.trip_count} trip${props.payload.trip_count !== 1 ? 's' : ''}`,
+            props.payload.zone_type || 'Zone',
+          ]}
+        />
+        <ReferenceLine y={45} stroke="#FF3D57" strokeDasharray="4 2" label={{ value: 'SLA', fill: '#FF3D57', fontSize: 9, position: 'right' }} />
         {sorted.map((entry, i) => (
           <Bar key={i} dataKey="avg_duration_min" fill={barColor(entry.avg_duration_min)} radius={[3, 3, 0, 0]} isAnimationActive />
         ))}
@@ -203,31 +216,31 @@ function TopCustomers({ data }) {
   if (!data?.length) return <EmptyState />
   const max = Math.max(...data.map((d) => Number(d.ltv_cents)))
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 220, overflowY: 'auto' }}>
       {data.map((c, i) => {
         const pct = max ? (Number(c.ltv_cents) / max) * 100 : 0
         const multi = Number(c.platform_count) >= 2
+        const orders = Number(c.order_count)
+        const barColor = orders >= 5 ? '#00E5A0' : orders >= 3 ? '#00C2FF' : multi ? '#7C5CFC' : '#1E3254'
         return (
           <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6,
-            border: multi ? '1px solid rgba(124,92,252,0.2)' : '1px solid transparent',
-            background: multi ? 'rgba(124,92,252,0.05)' : 'transparent',
+            display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 6,
+            border: `1px solid ${multi ? 'rgba(124,92,252,0.25)' : '#142038'}`,
+            background: multi ? 'rgba(124,92,252,0.05)' : i % 2 === 0 ? '#070E1A' : 'transparent',
           }}>
-            <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", width: 16 }}>{i + 1}</span>
-            <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#D4E5FF', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {c.customer_hk?.slice(0, 10)}...
+            <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", width: 14, flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#6B82A8', width: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {c.customer_hk?.slice(0, 8)}…
             </span>
-            <div style={{ flex: 1, height: 5, background: '#142038', borderRadius: 3 }}>
-              <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.5s', width: `${pct}%`, background: multi ? '#7C5CFC' : '#00C2FF' }} />
+            <div style={{ flex: 1, height: 6, background: '#142038', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.6s ease', width: `${pct}%`, background: barColor }} />
             </div>
-            <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", width: 60, textAlign: 'right' }}>
+            <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#D4E5FF', width: 52, textAlign: 'right', flexShrink: 0, fontWeight: 600 }}>
               ${(Number(c.ltv_cents) / 100).toFixed(0)}
             </span>
-            {multi && (
-              <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#7C5CFC', border: '1px solid rgba(124,92,252,0.3)', padding: '2px 5px', borderRadius: 3, flexShrink: 0 }}>
-                {c.platforms}
-              </span>
-            )}
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: orders >= 3 ? '#00E5A0' : '#2D4060', border: `1px solid ${orders >= 3 ? 'rgba(0,229,160,0.3)' : '#142038'}`, padding: '1px 5px', borderRadius: 3, flexShrink: 0, minWidth: 28, textAlign: 'center' }}>
+              {orders}x
+            </span>
           </div>
         )
       })}

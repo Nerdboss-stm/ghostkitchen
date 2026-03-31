@@ -78,8 +78,8 @@ NORMAL_RANGES = {
 PLATFORMS = ["uber_eats", "doordash", "own_app"]
 VEHICLE_TYPES = ["bicycle", "scooter", "car"]
 
-_emails = [fake.email() for _ in range(200)]
-CUSTOMERS = [{"id": f"C-{i:04d}", "email": _emails[i]} for i in range(200)]
+_emails = [fake.email() for _ in range(30)]
+CUSTOMERS = [{"id": f"C-{i:04d}", "email": _emails[i]} for i in range(30)]
 DRIVERS = [
     {
         "driver_id": f"DRV-{1000 + i}",
