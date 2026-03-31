@@ -179,8 +179,10 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
         page_size=200,
     )
     # Rebuild key map via SELECT (batch is faster than 200× RETURNING)
-    cur.execute("SELECT driver_id, driver_key FROM dim_driver")
-    driver_key_map = {row[0]: row[1] for row in cur.fetchall()}
+    cur.execute("SELECT driver_id, driver_key, city FROM dim_driver")
+    driver_rows_db = cur.fetchall()
+    driver_key_map = {row[0]: row[1] for row in driver_rows_db}
+    driver_city_map = {row[0]: row[2] for row in driver_rows_db}
     emit(f"  → {len(driver_key_map)} driver rows")
 
     # ── dim_delivery_zone ─────────────────────────────────────────────────────
@@ -365,6 +367,11 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
             ping_count = len(group)
             driver_id = str(group.iloc[0]["driver_id"])
             d_key = driver_key_map.get(driver_id)
+            driver_city = driver_city_map.get(driver_id, "Houston")
+            city_abbrev = CITIES.get(driver_city, "HOU")
+            zone_types = ["DOWNTOWN", "MIDTOWN", "UPTOWN", "SUBURBS-N", "SUBURBS-S"]
+            zone_id = f"{city_abbrev}-{zone_types[hash(str(delivery_id)) % len(zone_types)]}"
+            z_key = zone_key_map.get(zone_id)
             lats = group["lat"].values.tolist()
             lons = group["lon"].values.tolist()
             dist_km = sum(
@@ -382,7 +389,7 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
             avg_speed = float(group["speed_mph"].mean()) if "speed_mph" in group.columns else 0.0
             sla_breach = duration_min > 45.0
             trip_rows.append((
-                str(delivery_id), d_key, None, date_key, ping_count,
+                str(delivery_id), d_key, z_key, date_key, ping_count,
                 round(dist_km, 3), duration_min, round(avg_speed, 2), sla_breach, run_id,
             ))
     if trip_rows:

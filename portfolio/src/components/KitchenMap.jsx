@@ -117,7 +117,7 @@ export default function KitchenMap() {
       }}>
         {/* Sidebar header */}
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #142038' }}>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 16, color: '#D4E5FF', marginBottom: 4 }}>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 16, color: '#D4E5FF', marginBottom: 4 }}>
             Kitchen Map
           </div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', marginBottom: 10 }}>
@@ -135,7 +135,7 @@ export default function KitchenMap() {
                 background: '#0C1525',
                 borderRight: i < 2 ? '1px solid #142038' : 'none',
               }}>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, color: '#00C2FF' }}>{v}</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 16, color: '#00C2FF' }}>{v}</div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 1 }}>{l}</div>
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function KitchenMap() {
                     width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
                     background: avgUtil > 80 ? '#FF3D57' : avgUtil > 50 ? '#FFB547' : avgUtil > 0 ? '#00E5A0' : '#1E3254',
                   }} />
-                  <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 500, fontSize: 12, color: isActive ? '#D4E5FF' : '#6B82A8', flex: 1 }}>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 12, color: isActive ? '#D4E5FF' : '#6B82A8', flex: 1 }}>
                     {CITY_NAMES[abbrev]}
                   </span>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
@@ -261,7 +261,7 @@ export default function KitchenMap() {
               >
                 <Popup>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", minWidth: 160 }}>
-                    <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: '#D4E5FF', marginBottom: 6 }}>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: '#D4E5FF', marginBottom: 6 }}>
                       {k.id}
                     </div>
                     <div style={{ fontSize: 11, color: '#6B82A8', marginBottom: 8 }}>{k.city}, TX</div>

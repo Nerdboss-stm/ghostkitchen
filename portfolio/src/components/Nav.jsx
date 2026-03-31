@@ -54,7 +54,7 @@ export default function Nav() {
           </div>
           <span
             style={{
-              fontFamily: 'Syne, sans-serif',
+              fontFamily: 'Inter, sans-serif',
               fontWeight: 700,
               fontSize: 15,
               color: '#D4E5FF',
@@ -92,7 +92,7 @@ export default function Nav() {
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 500,
-                fontFamily: 'Syne, sans-serif',
+                fontFamily: 'Inter, sans-serif',
                 textDecoration: 'none',
                 transition: 'all 0.15s ease',
                 color: isActive ? '#00C2FF' : '#6B82A8',

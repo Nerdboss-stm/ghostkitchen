@@ -137,7 +137,7 @@ function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onCl
         {table.desc}
       </div>
       {table.rows != null && (
-        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: layerColor }}>
+        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: layerColor }}>
           {table.rows.toLocaleString()}
           <span style={{ fontSize: 9, fontWeight: 400, color: '#2D4060', marginLeft: 3 }}>rows</span>
         </div>
@@ -183,7 +183,7 @@ export default function DataLineage() {
       {/* Header */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF', marginBottom: 2 }}>
+          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF', marginBottom: 2 }}>
             Data Lineage
           </h2>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060' }}>
@@ -284,7 +284,7 @@ export default function DataLineage() {
           {selectedInfo.rows != null && (
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', marginBottom: 2 }}>ROW COUNT</div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 20, color: selectedInfo.layerColor }}>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 20, color: selectedInfo.layerColor }}>
                 {selectedInfo.rows.toLocaleString()}
               </div>
             </div>

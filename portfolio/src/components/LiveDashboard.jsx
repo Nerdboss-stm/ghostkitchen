@@ -30,7 +30,7 @@ function KpiCard({ label, value, sub, color = '#00C2FF', delta, icon: Icon }) {
         <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
         {Icon && <Icon size={13} style={{ color }} />}
       </div>
-      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 30, fontWeight: 800, marginBottom: 4, color }}>
+      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 800, marginBottom: 4, color }}>
         {value ?? <span style={{ color: '#142038' }}>—</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -49,7 +49,7 @@ function KpiCard({ label, value, sub, color = '#00C2FF', delta, icon: Icon }) {
 function SectionTitle({ children }) {
   return (
     <h3 style={{
-      fontFamily: 'Syne, sans-serif', fontWeight: 600, fontSize: 12,
+      fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12,
       color: '#6B82A8', marginBottom: 14, textTransform: 'uppercase',
       letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 8,
     }}>
@@ -149,7 +149,8 @@ function SensorBar({ data }) {
     const entry = { kitchen_id: kid.replace('K-', '') }
     types.forEach((t) => {
       const row = data.find((d) => d.kitchen_id === kid && d.sensor_type === t)
-      entry[t] = Number(row?.anomaly_count || 0)
+      entry[t] = Number(row?.reading_count || 0)
+      entry[`${t}_anomalies`] = Number(row?.anomaly_count || 0)
     })
     return entry
   })
@@ -159,9 +160,15 @@ function SensorBar({ data }) {
         <CartesianGrid vertical={false} stroke={GRID_COLOR} />
         <XAxis dataKey="kitchen_id" tick={AXIS_TICK} tickLine={false} axisLine={false} />
         <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(v, name, props) => {
+            const anomalies = props.payload[`${name}_anomalies`] || 0
+            return [`${v} readings${anomalies ? ` (${anomalies} anomalies)` : ''}`, name]
+          }}
+        />
         {types.map((t) => (
-          <Bar key={t} dataKey={t} stackId="a" fill={SENSOR_COLORS[t] || '#2D4060'} />
+          <Bar key={t} dataKey={t} stackId="a" fill={SENSOR_COLORS[t] || '#2D4060'} name={t} />
         ))}
       </BarChart>
     </ResponsiveContainer>
@@ -288,7 +295,7 @@ export default function LiveDashboard() {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 26, color: '#D4E5FF' }}>Live Dashboard</h2>
+              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 26, color: '#D4E5FF' }}>Live Dashboard</h2>
               <span style={{
                 display: 'flex', alignItems: 'center', gap: 5, fontSize: 10,
                 fontFamily: "'JetBrains Mono', monospace", color: '#00E5A0',
@@ -313,7 +320,7 @@ export default function LiveDashboard() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
                 border: '1px solid #142038', background: 'transparent', color: '#6B82A8',
-                fontSize: 12, fontFamily: 'Syne, sans-serif', cursor: 'pointer', transition: 'all 0.15s',
+                fontSize: 12, fontFamily: 'Inter, sans-serif', cursor: 'pointer', transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.color = '#D4E5FF'; e.currentTarget.style.borderColor = '#6B82A8' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#6B82A8'; e.currentTarget.style.borderColor = '#142038' }}
@@ -364,7 +371,7 @@ export default function LiveDashboard() {
             <DeliveryBar data={data?.zones} />
           </div>
           <div className="gk-card" style={{ padding: 20 }}>
-            <SectionTitle>Sensor Anomalies by Kitchen</SectionTitle>
+            <SectionTitle>Sensor Readings by Kitchen (anomalies in tooltip)</SectionTitle>
             <SensorBar data={data?.sensors} />
           </div>
           <div className="gk-card" style={{ padding: 20 }}>

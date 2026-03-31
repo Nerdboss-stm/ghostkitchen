@@ -40,7 +40,7 @@ function StageRow({ stage, stageData, isActive, isDone, index }) {
           <div style={{
             fontSize: 13,
             fontWeight: 600,
-            fontFamily: 'Syne, sans-serif',
+            fontFamily: 'Inter, sans-serif',
             color: isDone || isActive ? '#D4E5FF' : '#2D4060',
             transition: 'color 0.3s',
           }}>
@@ -84,7 +84,7 @@ function MetricCard({ label, value, unit, color = '#00C2FF', delay = 0 }) {
       <div style={{ fontSize: 10, color: '#6B82A8', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         {label}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'Syne, sans-serif', color }}>
+      <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'Inter, sans-serif', color }}>
         {typeof value === 'number' ? value.toLocaleString() : value}
         {unit && <span style={{ fontSize: 12, color: '#6B82A8', marginLeft: 4 }}>{unit}</span>}
       </div>
@@ -179,7 +179,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
       >
         <CheckCircle size={36} style={{ color: '#00E5A0' }} />
       </div>
-      <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 28, fontWeight: 800, color: '#D4E5FF', marginBottom: 6 }}>
+      <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 28, fontWeight: 800, color: '#D4E5FF', marginBottom: 6 }}>
         Pipeline Complete
       </h2>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', marginBottom: 28 }}>
@@ -196,7 +196,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           { label: 'GE Pass', value: stats?.ge_passed },
         ].map((s) => (
           <div key={s.label} className="gk-card" style={{ padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Syne, sans-serif', color: '#00C2FF' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Inter, sans-serif', color: '#00C2FF' }}>
               {s.value?.toLocaleString()}
             </div>
             <div style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.label}</div>
@@ -209,7 +209,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           onClick={onViewDashboard}
           style={{
             padding: '12px 24px', borderRadius: 10, background: '#00E5A0',
-            color: '#040912', fontWeight: 700, fontSize: 13, fontFamily: 'Syne, sans-serif',
+            color: '#040912', fontWeight: 700, fontSize: 13, fontFamily: 'Inter, sans-serif',
             border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
             transition: 'opacity 0.2s',
           }}
@@ -223,7 +223,7 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
           style={{
             padding: '12px 24px', borderRadius: 10,
             border: '1px solid #1E3254', background: 'transparent',
-            color: '#6B82A8', fontSize: 13, fontFamily: 'Syne, sans-serif', fontWeight: 500,
+            color: '#6B82A8', fontSize: 13, fontFamily: 'Inter, sans-serif', fontWeight: 500,
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
             transition: 'all 0.2s',
           }}
@@ -355,7 +355,7 @@ export default function PipelineOrchestrator() {
           </div>
 
           <h1 style={{
-            fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(40px, 7vw, 68px)',
+            fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 'clamp(40px, 7vw, 68px)',
             color: '#D4E5FF', textAlign: 'center', lineHeight: 1.05, marginBottom: 12,
           }}>
             Pipeline<br />
@@ -374,7 +374,7 @@ export default function PipelineOrchestrator() {
               { v: '15', l: 'SQL views' },
             ].map(({ v, l }) => (
               <div key={l} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: '#00C2FF' }}>{v}</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 24, fontWeight: 800, color: '#00C2FF' }}>{v}</div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>{l}</div>
               </div>
             ))}
@@ -386,7 +386,7 @@ export default function PipelineOrchestrator() {
             style={{
               padding: '16px 40px', borderRadius: 14,
               background: '#00C2FF', color: '#040912',
-              fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 16,
+              fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 16,
               border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 10,
               transition: 'opacity 0.2s', letterSpacing: '0.02em',
@@ -452,7 +452,7 @@ export default function PipelineOrchestrator() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 20 }}>{s?.icon}</span>
                             <div>
-                              <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: s?.color }}>{s?.label}</h3>
+                              <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 700, color: s?.color }}>{s?.label}</h3>
                               <p style={{ fontSize: 10, color: '#6B82A8', fontFamily: "'JetBrains Mono', monospace" }}>{s?.sub}</p>
                             </div>
                           </div>

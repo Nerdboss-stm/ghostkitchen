@@ -53,6 +53,10 @@ function DimNode({ data, selected }) {
       <Handle type="source" position={Position.Top} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
       <Handle type="source" position={Position.Left} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
       <Handle type="source" position={Position.Right} style={{ background: '#00C2FF', border: 'none', width: 6, height: 6 }} />
+      <Handle type="target" position={Position.Bottom} id="t-b" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Top} id="t-t" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Left} id="t-l" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Right} id="t-r" style={{ background: '#00C2FF', border: 'none', width: 6, height: 6, opacity: 0 }} />
       <div className="flex items-center justify-between mb-0.5">
         <span className="text-[8px] font-mono text-[#00C2FF] font-bold tracking-widest uppercase bg-[#00C2FF10] border border-[#00C2FF20] px-1.5 py-0.5 rounded">
           DIM
@@ -84,6 +88,10 @@ function SilverNode({ data, selected }) {
       <Handle type="source" position={Position.Top} style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6 }} />
       <Handle type="source" position={Position.Left} style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6 }} />
       <Handle type="source" position={Position.Right} style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6 }} />
+      <Handle type="target" position={Position.Bottom} id="t-b" style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Top} id="t-t" style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Left} id="t-l" style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6, opacity: 0 }} />
+      <Handle type="target" position={Position.Right} id="t-r" style={{ background: '#7C5CFC', border: 'none', width: 6, height: 6, opacity: 0 }} />
       <div className="flex items-center justify-between mb-0.5">
         <span className="text-[8px] font-mono text-[#7C5CFC] font-bold tracking-widest uppercase bg-[#7C5CFC10] border border-[#7C5CFC20] px-1.5 py-0.5 rounded">
           VAULT
@@ -245,7 +253,7 @@ export default function SchemaExplorer() {
           }}>
             Star Schema · Data Vault 2.0 · SCD Types 0/1/2
           </div>
-          <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF' }}>
+          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#D4E5FF' }}>
             Schema Explorer
           </h2>
         </div>
@@ -258,7 +266,7 @@ export default function SchemaExplorer() {
               onClick={() => setLayerFilter(f)}
               style={{
                 padding: '5px 12px', borderRadius: 6, fontSize: 11,
-                fontFamily: 'Syne, sans-serif', fontWeight: 500,
+                fontFamily: 'Inter, sans-serif', fontWeight: 500,
                 border: '1px solid',
                 borderColor: layerFilter === f ? '#1E3254' : '#142038',
                 background: layerFilter === f ? '#0C1525' : 'transparent',

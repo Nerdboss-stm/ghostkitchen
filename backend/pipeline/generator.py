@@ -113,7 +113,7 @@ def generate(emit) -> dict:
         customer = random.choice(CUSTOMERS)
         platform = PLATFORMS[i % 3]
         order_id = str(uuid.uuid4())
-        placed_at = _ts(random.uniform(0, 1440))
+        placed_at = _ts(random.uniform(0, 14 * 24 * 60))
 
         if platform == "uber_eats":
             rec = {
