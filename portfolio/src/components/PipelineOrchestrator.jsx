@@ -505,12 +505,18 @@ export default function PipelineOrchestrator() {
           >
             <Play size={20} /> RUN PIPELINE
           </button>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center' }}>
-            Executes a full data pipeline in the cloud · ~60 seconds · Results live for 48h
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 12 }}>
+            ~60 seconds · results live for 48h · writes real rows to PostgreSQL
           </p>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', textAlign: 'center', marginTop: 4 }}>
-            Cloud demo · production stack: Kafka → Spark 3.5 → Airflow → Delta Lake on S3
-          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+            {['Kafka', 'Spark 3.5', 'Airflow', 'Delta Lake', 'Data Vault 2.0', 'Great Expectations'].map((t) => (
+              <span key={t} style={{
+                padding: '3px 10px', borderRadius: 20, fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+                border: '1px solid #142038', color: '#2D4060', background: '#070E1A',
+              }}>{t}</span>
+            ))}
+          </div>
         </div>
       )}
 
