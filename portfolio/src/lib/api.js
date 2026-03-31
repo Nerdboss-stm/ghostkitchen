@@ -7,29 +7,40 @@ export async function triggerRun() {
 }
 
 export function streamRun(runId, onEvent, onDone) {
-  const es = new EventSource(`${BASE}/run/${runId}/stream`)
-  es.onmessage = (e) => {
+  // Poll-based implementation — no SSE, works on Safari + all proxies
+  let since = 0
+  let stopped = false
+  let intervalId = null
+
+  const poll = async () => {
+    if (stopped) return
     try {
-      const data = JSON.parse(e.data)
-      if (data.stage === 'STREAM_END') {
-        es.close()
+      const res = await fetch(`${BASE}/run/${runId}/events?since=${since}`)
+      if (!res.ok) return
+      const { events, done } = await res.json()
+      for (const evt of events) {
+        if (stopped) return
+        onEvent(evt)
+        since++
+      }
+      if (done && !stopped) {
+        stopped = true
+        clearInterval(intervalId)
         onDone?.()
-      } else {
-        onEvent(data)
       }
     } catch {
-      // ignore parse errors
+      // network blip — keep polling
     }
   }
-  es.onerror = () => {
-    // readyState CLOSED (2) = permanent failure (e.g. non-200 response)
-    // readyState CONNECTING (0) = browser is auto-reconnecting after a drop — let it
-    if (es.readyState === EventSource.CLOSED) {
-      es.close()
-      onDone?.()
-    }
+
+  // Poll immediately, then every 800ms
+  poll()
+  intervalId = setInterval(poll, 800)
+
+  return () => {
+    stopped = true
+    clearInterval(intervalId)
   }
-  return () => es.close()
 }
 
 export async function fetchKpis() {

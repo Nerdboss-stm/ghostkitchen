@@ -327,6 +327,19 @@ async def stream_run(run_id: str):
     )
 
 
+@app.get("/run/{run_id}/events")
+async def run_events(run_id: str, since: int = 0):
+    """Poll-based alternative to SSE. Returns events[since:] + done flag."""
+    with _run_lock:
+        events = list(_run_events.get(run_id, []))
+        done = _run_done.get(run_id, False)
+    return {
+        "events": events[since:],
+        "total": len(events),
+        "done": done,
+    }
+
+
 @app.get("/run/{run_id}/status")
 async def run_status(run_id: str):
     with _run_lock:
