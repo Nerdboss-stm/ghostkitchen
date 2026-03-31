@@ -168,7 +168,7 @@ def resolve_identity(norm_df: pd.DataFrame, conn, run_id: str, emit) -> dict:
     now = datetime.utcnow()
     exact = 0
     fallback = 0
-    rows = []
+    seen = {}  # deduplicate by (customer_hk, platform) — same customer can have many orders
 
     for _, r in norm_df.iterrows():
         email = r.get("customer_email")
@@ -184,16 +184,19 @@ def resolve_identity(norm_df: pd.DataFrame, conn, run_id: str, emit) -> dict:
             confidence = 0.5
             fallback += 1
             c_email = None
-        rows.append((
-            c_hk, r["platform"], str(r.get("customer_ref", "")),
-            c_email, confidence, method, now, run_id,
-        ))
+        key = (c_hk, r["platform"])
+        if key not in seen:
+            seen[key] = (
+                c_hk, r["platform"], str(r.get("customer_ref", "")),
+                c_email, confidence, method, now, run_id,
+            )
 
+    rows = list(seen.values())
     execute_values(
         cur,
         "INSERT INTO silver_identity_bridge "
         "(customer_hk, platform, platform_id, email, match_confidence, match_method, load_ts, run_id) "
-        "VALUES %s",
+        "VALUES %s ON CONFLICT DO NOTHING",
         rows,
         page_size=200,
     )
