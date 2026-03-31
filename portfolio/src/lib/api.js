@@ -22,8 +22,12 @@ export function streamRun(runId, onEvent, onDone) {
     }
   }
   es.onerror = () => {
-    es.close()
-    onDone?.()
+    // readyState CLOSED (2) = permanent failure (e.g. non-200 response)
+    // readyState CONNECTING (0) = browser is auto-reconnecting after a drop — let it
+    if (es.readyState === EventSource.CLOSED) {
+      es.close()
+      onDone?.()
+    }
   }
   return () => es.close()
 }

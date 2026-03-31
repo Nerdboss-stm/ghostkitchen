@@ -294,16 +294,26 @@ async def trigger_run():
 async def stream_run(run_id: str):
     async def generator() -> AsyncGenerator[str, None]:
         sent = 0
+        idle_ticks = 0
         while True:
             with _run_lock:
                 events = list(_run_events.get(run_id, []))
                 done = _run_done.get(run_id, False)
+            new_events = False
             while sent < len(events):
                 yield f"data: {json.dumps(events[sent])}\n\n"
                 sent += 1
+                new_events = True
+                idle_ticks = 0
             if done and sent >= len(events):
                 yield 'data: {"stage":"STREAM_END"}\n\n'
                 break
+            # Send SSE comment heartbeat every ~2s of silence so Safari and
+            # Railway's proxy never close the connection due to inactivity.
+            if not new_events:
+                idle_ticks += 1
+                if idle_ticks % 13 == 0:  # 13 × 0.15s ≈ 2s
+                    yield ": heartbeat\n\n"
             await asyncio.sleep(0.15)
 
     return StreamingResponse(
