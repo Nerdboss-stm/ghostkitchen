@@ -379,16 +379,97 @@ export default function PipelineOrchestrator() {
             Modelled on the Texas ghost kitchen market — 50 virtual dark kitchens across Houston, Dallas, Austin and 7 other TX cities
           </p>
 
-          {/* Why Lambda callout */}
+          {/* Callout row: Lambda rationale + Late-arriving data */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24, maxWidth: 560, width: '100%' }}>
+            <div style={{
+              flex: 1, padding: '10px 14px', borderRadius: 10,
+              border: '1px solid rgba(255, 181, 71, 0.25)', background: 'rgba(255, 181, 71, 0.06)',
+              textAlign: 'left',
+            }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#FFB547', marginBottom: 4 }}>⚖ Lambda over Kappa</p>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
+                Order corrections need batch reprocessing — Kappa can't replay state machines retroactively.
+              </p>
+            </div>
+            <div style={{
+              flex: 1, padding: '10px 14px', borderRadius: 10,
+              border: '1px solid rgba(0, 194, 255, 0.2)', background: 'rgba(0, 194, 255, 0.04)',
+              textAlign: 'left',
+            }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#00C2FF', marginBottom: 4 }}>⏱ Late-Arriving Data</p>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
+                24h watermark · events accepted up to 24h late · Airflow reconciliation DAG at 02:00 UTC
+              </p>
+            </div>
+          </div>
+
+          {/* Lambda architecture diagram */}
           <div style={{
-            marginBottom: 28, padding: '10px 16px', borderRadius: 10,
-            border: '1px solid rgba(255, 181, 71, 0.25)', background: 'rgba(255, 181, 71, 0.06)',
-            maxWidth: 460, textAlign: 'left',
+            marginBottom: 28, maxWidth: 560, width: '100%',
+            border: '1px solid #142038', borderRadius: 12, overflow: 'hidden',
           }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#FFB547', marginBottom: 4 }}>⚖ Lambda over Kappa</p>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#4A4A5A', lineHeight: 1.6 }}>
-              Order corrections need full batch reprocessing — streaming-only (Kappa) can't replay state machines retroactively. Dual-path gives real-time UX and correctness.
-            </p>
+            <div style={{
+              background: '#070E1A', padding: '8px 14px', borderBottom: '1px solid #142038',
+              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060',
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+            }}>
+              Lambda Architecture — Dual Path
+            </div>
+            <div style={{ display: 'flex', background: '#040912' }}>
+              {/* Speed layer */}
+              <div style={{ flex: 1, padding: '12px', borderRight: '1px solid #142038' }}>
+                <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#E8601C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  ⚡ Speed Layer
+                </div>
+                {[
+                  { label: 'Kafka (4 topics)', color: '#E8601C' },
+                  { label: 'Spark Streaming', color: '#E8601C', sub: '30s micro-batch' },
+                  { label: 'Speed Tables', color: '#E8601C', sub: 'real-time UX' },
+                ].map((item, i) => (
+                  <div key={i}>
+                    <div style={{
+                      padding: '5px 8px', borderRadius: 6, marginBottom: 2,
+                      border: `1px solid ${item.color}30`, background: `${item.color}08`,
+                      fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: item.color,
+                    }}>
+                      {item.label}
+                      {item.sub && <span style={{ color: '#4A4A5A', marginLeft: 6 }}>{item.sub}</span>}
+                    </div>
+                    {i < 2 && <div style={{ fontSize: 10, color: '#2D4060', textAlign: 'center', marginBottom: 2 }}>↓</div>}
+                  </div>
+                ))}
+              </div>
+              {/* Batch layer */}
+              <div style={{ flex: 1, padding: '12px' }}>
+                <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#00E5A0', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  📦 Batch Layer
+                </div>
+                {[
+                  { label: 'Airflow DAGs (5)', color: '#00E5A0' },
+                  { label: 'Spark 3.5 batch', color: '#00E5A0', sub: 'full reprocess' },
+                  { label: 'Delta Lake MERGE', color: '#FFB547', sub: 'authoritative truth' },
+                ].map((item, i) => (
+                  <div key={i}>
+                    <div style={{
+                      padding: '5px 8px', borderRadius: 6, marginBottom: 2,
+                      border: `1px solid ${item.color}30`, background: `${item.color}08`,
+                      fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: item.color,
+                    }}>
+                      {item.label}
+                      {item.sub && <span style={{ color: '#4A4A5A', marginLeft: 6 }}>{item.sub}</span>}
+                    </div>
+                    {i < 2 && <div style={{ fontSize: 10, color: '#2D4060', textAlign: 'center', marginBottom: 2 }}>↓</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Serving layer */}
+            <div style={{
+              padding: '7px 14px', borderTop: '1px solid #142038', background: '#070E1A',
+              fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', textAlign: 'center',
+            }}>
+              Serving Layer · PostgreSQL · Star Schema · 12 Gold tables
+            </div>
           </div>
 
           {/* Stats strip */}

@@ -221,10 +221,96 @@ function SchemaPanel({ node, onClose }) {
   )
 }
 
+// ── Identity resolution visualizer ───────────────────────────────────────────
+const RAW_RECORDS = [
+  { platform: 'DoorDash', email: 'Sarah.J@Gmail.com', order_id: 'DD-8821', platform_color: '#FF3D57' },
+  { platform: 'Uber Eats', email: 'sarah.j@gmail.com', order_id: 'UE-4492', platform_color: '#00C2FF' },
+  { platform: 'OwnApp', email: 'SARAH.J@GMAIL.COM', order_id: 'OA-1103', platform_color: '#00E5A0' },
+]
+
+function IdentityVisualizer() {
+  const mono = { fontFamily: "'JetBrains Mono', monospace" }
+  return (
+    <div style={{ padding: '20px 24px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ fontSize: 11, ...mono, color: '#2D4060' }}>
+        Same customer, 3 platforms, 3 email formats → 1 unified identity
+      </div>
+
+      {/* Step 1: Raw records */}
+      <div>
+        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>① Raw ingestion (Bronze)</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {RAW_RECORDS.map((r) => (
+            <div key={r.platform} style={{
+              flex: 1, padding: '8px 10px', borderRadius: 8,
+              border: `1px solid ${r.platform_color}30`, background: `${r.platform_color}08`,
+            }}>
+              <div style={{ fontSize: 9, ...mono, color: r.platform_color, marginBottom: 4 }}>{r.platform}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#6B82A8' }}>{r.email}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 2 }}>{r.order_id}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <div style={{ textAlign: 'center', fontSize: 12, color: '#2D4060', ...mono }}>↓ normalize + MD5 hash</div>
+
+      {/* Step 2: Normalized */}
+      <div>
+        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>② Normalized email hash (Silver)</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {RAW_RECORDS.map((r) => (
+            <div key={r.platform} style={{
+              flex: 1, padding: '8px 10px', borderRadius: 8,
+              border: '1px solid #142038', background: '#070E1A',
+            }}>
+              <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', marginBottom: 4 }}>{r.platform}</div>
+              <div style={{ fontSize: 9, ...mono, color: '#7C5CFC' }}>sarah.j@gmail.com</div>
+              <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 2 }}>md5: a3f9…c21e</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <div style={{ textAlign: 'center', fontSize: 12, color: '#2D4060', ...mono }}>↓ group by email_hash → assign customer_key</div>
+
+      {/* Step 3: Resolved */}
+      <div>
+        <div style={{ fontSize: 9, ...mono, color: '#4A4A5A', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>③ Unified identity (Gold)</div>
+        <div style={{
+          padding: '12px 14px', borderRadius: 10,
+          border: '2px solid #00E5A040', background: '#00E5A008',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ fontSize: 9, ...mono, color: '#00E5A0', marginBottom: 4 }}>dim_customer</div>
+            <div style={{ fontSize: 11, ...mono, color: '#D4E5FF', fontWeight: 700 }}>customer_key: ck_a3f9c21e</div>
+            <div style={{ fontSize: 9, ...mono, color: '#2D4060', marginTop: 4 }}>platforms: DoorDash · Uber Eats · OwnApp</div>
+          </div>
+          <div style={{
+            padding: '4px 10px', borderRadius: 6,
+            border: '1px solid #00E5A030', background: '#00E5A010',
+            fontSize: 9, ...mono, color: '#00E5A0',
+          }}>
+            match_confidence: 1.0
+          </div>
+        </div>
+      </div>
+
+      <div style={{ fontSize: 9, ...mono, color: '#2D4060', borderTop: '1px solid #142038', paddingTop: 12 }}>
+        PII rule: raw email stored in Silver only · MD5 hash propagated to Gold · GDPR-compliant delete via hub key
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function SchemaExplorer() {
   const [selectedNode, setSelectedNode] = useState(null)
   const [layerFilter, setLayerFilter] = useState('All')
+  const [view, setView] = useState('schema') // 'schema' | 'identity'
 
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode((prev) => (prev?.id === node.id ? null : node))
@@ -258,30 +344,55 @@ export default function SchemaExplorer() {
           </h2>
         </div>
 
-        {/* Layer filter */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          {LAYER_FILTERS.map((f) => (
+        {/* Controls row */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {/* View toggle */}
+          {['schema', 'identity'].map((v) => (
             <button
-              key={f}
-              onClick={() => setLayerFilter(f)}
+              key={v}
+              onClick={() => setView(v)}
               style={{
                 padding: '5px 12px', borderRadius: 6, fontSize: 11,
-                fontFamily: 'Inter, sans-serif', fontWeight: 500,
+                fontFamily: 'Inter, sans-serif', fontWeight: 600,
                 border: '1px solid',
-                borderColor: layerFilter === f ? '#1E3254' : '#142038',
-                background: layerFilter === f ? '#0C1525' : 'transparent',
-                color: layerFilter === f ? '#D4E5FF' : '#2D4060',
+                borderColor: view === v ? '#7C5CFC60' : '#142038',
+                background: view === v ? '#7C5CFC15' : 'transparent',
+                color: view === v ? '#7C5CFC' : '#2D4060',
                 cursor: 'pointer', transition: 'all 0.15s',
               }}
             >
-              {f}
+              {v === 'schema' ? 'Schema' : 'Identity Resolution'}
             </button>
           ))}
+          {view === 'schema' && (
+            <>
+              <div style={{ width: 1, height: 16, background: '#142038' }} />
+              {LAYER_FILTERS.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setLayerFilter(f)}
+                  style={{
+                    padding: '5px 12px', borderRadius: 6, fontSize: 11,
+                    fontFamily: 'Inter, sans-serif', fontWeight: 500,
+                    border: '1px solid',
+                    borderColor: layerFilter === f ? '#1E3254' : '#142038',
+                    background: layerFilter === f ? '#0C1525' : 'transparent',
+                    color: layerFilter === f ? '#D4E5FF' : '#2D4060',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
       {/* Flow container */}
-      <div style={{ flex: 1, position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid #142038', minHeight: 0 }}>
+      <div style={{ flex: 1, position: 'relative', borderRadius: 12, overflow: 'hidden', border: '1px solid #142038', minHeight: 0, background: '#040912' }}>
+        {view === 'identity' && <IdentityVisualizer />}
+        {view === 'schema' && (<>
         <ReactFlow
           nodes={filteredNodes.map((n) => ({
             ...n,
@@ -324,6 +435,7 @@ export default function SchemaExplorer() {
             Click any node to inspect schema
           </div>
         )}
+        </>)}
       </div>
 
       {/* Legend */}
