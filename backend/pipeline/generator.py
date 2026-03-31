@@ -102,9 +102,9 @@ def generate(emit) -> dict:
     emit("Initialising Faker seed=42 ...")
 
     # ── Orders ────────────────────────────────────────────────────────────────
-    emit("Generating 500 orders across 3 platforms ...")
+    emit("Generating 200 orders across 3 platforms ...")
     orders = []
-    for i in range(500):
+    for i in range(200):
         kitchen = random.choice(KITCHENS)
         brand = random.choice(kitchen["brands"])
         items_pool = MENU_ITEMS.get(brand, [{"item_id": "XX-01", "name": "Item", "price": 9.99}])
@@ -151,9 +151,9 @@ def generate(emit) -> dict:
     emit(f"  → {len(orders)} raw order events (including ~5% dupes)")
 
     # ── Sensors ───────────────────────────────────────────────────────────────
-    emit("Generating 2000 sensor readings ...")
+    emit("Generating 500 sensor readings ...")
     sensors = []
-    for _ in range(2000):
+    for _ in range(500):
         kitchen = random.choice(KITCHENS)
         s_type = random.choice(SENSOR_TYPES)
         lo, hi = NORMAL_RANGES[s_type]
@@ -177,7 +177,7 @@ def generate(emit) -> dict:
     emit(f"  → {len(sensors)} sensor readings")
 
     # ── GPS pings ─────────────────────────────────────────────────────────────
-    emit("Generating 8000 GPS pings for 100 active deliveries ...")
+    emit("Generating 1500 GPS pings for 30 active deliveries ...")
     gps = []
     active_deliveries = [
         {
@@ -187,7 +187,7 @@ def generate(emit) -> dict:
             "kitchen": random.choice(KITCHENS),
             "start_offset": random.uniform(0, 120),
         }
-        for _ in range(100)
+        for _ in range(30)
     ]
     for deliv in active_deliveries:
         n_pings = random.randint(60, 100)

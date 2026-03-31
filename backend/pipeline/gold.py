@@ -4,6 +4,7 @@ import math
 import random
 import pandas as pd
 from datetime import datetime, date, timedelta
+from psycopg2.extras import execute_values
 
 
 def _hk(value: str) -> str:
@@ -93,9 +94,11 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
             int(d.strftime("%W")), d.weekday(), d.strftime("%A"), d.weekday() >= 5,
         ))
         d += timedelta(days=1)
-    cur.executemany(
-        "INSERT INTO dim_date VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
+    execute_values(
+        cur,
+        "INSERT INTO dim_date VALUES %s ON CONFLICT DO NOTHING",
         dates,
+        page_size=500,
     )
     emit(f"  → {len(dates)} date rows")
 
@@ -107,7 +110,12 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
             period = "AM" if h < 12 else "PM"
             is_peak = h in (7, 8, 11, 12, 13, 17, 18, 19, 20)
             times.append((h * 100 + m, h, m, period, is_peak))
-    cur.executemany("INSERT INTO dim_time VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING", times)
+    execute_values(
+        cur,
+        "INSERT INTO dim_time VALUES %s ON CONFLICT DO NOTHING",
+        times,
+        page_size=500,
+    )
     emit(f"  → {len(times)} time rows")
 
     # ── dim_kitchen ───────────────────────────────────────────────────────────
@@ -137,30 +145,40 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
     emit(f"  → {len(brand_key_map)} brand rows")
 
     # ── bridge_kitchen_brand ──────────────────────────────────────────────────
+    bridge_rows = []
     for k in KITCHENS_REF:
         k_key = kitchen_key_map.get(k["kitchen_id"])
         for brand in k["brands"]:
             b_key = brand_key_map.get(brand)
             if k_key and b_key:
-                cur.execute(
-                    "INSERT INTO bridge_kitchen_brand VALUES (%s,%s) ON CONFLICT DO NOTHING",
-                    (k_key, b_key),
-                )
+                bridge_rows.append((k_key, b_key))
+    if bridge_rows:
+        execute_values(
+            cur,
+            "INSERT INTO bridge_kitchen_brand VALUES %s ON CONFLICT DO NOTHING",
+            bridge_rows,
+            page_size=200,
+        )
 
     # ── dim_driver ────────────────────────────────────────────────────────────
     emit("  Building dim_driver (200 drivers) ...")
-    driver_key_map = {}
     city_list = list(CITIES.keys())
+    driver_rows = []
     for i in range(200):
         driver_id = f"DRV-{1000 + i}"
         city = city_list[i // 20]
         vtype = VEHICLE_TYPES[i % 3]
-        cur.execute(
-            "INSERT INTO dim_driver (driver_id, city, vehicle_type) "
-            "VALUES (%s,%s,%s) ON CONFLICT (driver_id) DO UPDATE SET city=EXCLUDED.city RETURNING driver_key",
-            (driver_id, city, vtype),
-        )
-        driver_key_map[driver_id] = cur.fetchone()[0]
+        driver_rows.append((driver_id, city, vtype))
+    execute_values(
+        cur,
+        "INSERT INTO dim_driver (driver_id, city, vehicle_type) VALUES %s "
+        "ON CONFLICT (driver_id) DO UPDATE SET city=EXCLUDED.city",
+        driver_rows,
+        page_size=200,
+    )
+    # Rebuild key map via SELECT (batch is faster than 200× RETURNING)
+    cur.execute("SELECT driver_id, driver_key FROM dim_driver")
+    driver_key_map = {row[0]: row[1] for row in cur.fetchall()}
     emit(f"  → {len(driver_key_map)} driver rows")
 
     # ── dim_delivery_zone ─────────────────────────────────────────────────────
@@ -187,6 +205,8 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
     customer_key_map = {}
     if not norm_df.empty:
         seen = set()
+        customer_rows = []
+        customer_hk_order = []
         for _, r in norm_df.iterrows():
             email = r.get("customer_email")
             ref = r.get("customer_ref", "")
@@ -198,12 +218,17 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
                 email_hash = _hk(str(ref))
             if c_hk not in seen:
                 seen.add(c_hk)
-                cur.execute(
-                    "INSERT INTO dim_customer (customer_hk, email_hash, platform_count, first_seen_date, valid_from, valid_to, is_current) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING customer_key",
-                    (c_hk, email_hash, 1, today, today, None, True),
-                )
-                customer_key_map[c_hk] = cur.fetchone()[0]
+                customer_rows.append((c_hk, email_hash, 1, today, today, None, True))
+                customer_hk_order.append(c_hk)
+        execute_values(
+            cur,
+            "INSERT INTO dim_customer (customer_hk, email_hash, platform_count, first_seen_date, valid_from, valid_to, is_current) "
+            "VALUES %s RETURNING customer_hk, customer_key",
+            customer_rows,
+            page_size=200,
+        )
+        for row in cur.fetchall():
+            customer_key_map[row[0]] = row[1]
     emit(f"  → {len(customer_key_map)} customer rows")
 
     # ── dim_menu_item ─────────────────────────────────────────────────────────
@@ -221,7 +246,7 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
 
     # ── fact_order ────────────────────────────────────────────────────────────
     emit("  Building fact_order ...")
-    fact_orders_count = 0
+    fact_order_rows = []
     if not norm_df.empty:
         for _, r in norm_df.iterrows():
             o_hk = _hk(f"{r['platform']}:{r['order_id']}")
@@ -247,42 +272,50 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
             items = r.get("items")
             item_count = len(items) if isinstance(items, list) else 1
             total = r.get("total_cents", 0)
-            cur.execute(
-                "INSERT INTO fact_order (order_hk, order_id, date_key, time_key, kitchen_key, brand_key, "
-                "customer_key, zone_key, driver_key, platform, total_cents, item_count, placed_at, run_id) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (
-                    o_hk, r["order_id"], date_key, time_key, k_key, b_key, c_key,
-                    z_key, d_key, r["platform"],
-                    int(total) if pd.notna(total) else 0,
-                    item_count, placed_dt, run_id,
-                ),
-            )
-            fact_orders_count += 1
-    emit(f"  → {fact_orders_count} fact_order rows")
+            fact_order_rows.append((
+                o_hk, r["order_id"], date_key, time_key, k_key, b_key, c_key,
+                z_key, d_key, r["platform"],
+                int(total) if pd.notna(total) else 0,
+                item_count, placed_dt, run_id,
+            ))
+    if fact_order_rows:
+        execute_values(
+            cur,
+            "INSERT INTO fact_order (order_hk, order_id, date_key, time_key, kitchen_key, brand_key, "
+            "customer_key, zone_key, driver_key, platform, total_cents, item_count, placed_at, run_id) "
+            "VALUES %s",
+            fact_order_rows,
+            page_size=200,
+        )
+    emit(f"  → {len(fact_order_rows)} fact_order rows")
 
     # ── fact_order_state_history ──────────────────────────────────────────────
     emit("  Building fact_order_state_history ...")
     statuses = ["placed", "confirmed", "preparing", "ready", "picked_up", "delivered"]
-    state_count = 0
+    state_rows = []
     if not norm_df.empty:
         for _, r in norm_df.iterrows():
             o_hk = _hk(f"{r['platform']}:{r['order_id']}")
             for i in range(1, len(statuses)):
-                cur.execute(
-                    "INSERT INTO fact_order_state_history "
-                    "(order_hk, order_id, from_status, to_status, transition_ts, lag_seconds, run_id) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                    (o_hk, r["order_id"], statuses[i - 1], statuses[i], now,
-                     random.randint(60, 600), run_id),
-                )
-                state_count += 1
-    emit(f"  → {state_count} state transition rows")
+                state_rows.append((
+                    o_hk, r["order_id"], statuses[i - 1], statuses[i], now,
+                    random.randint(60, 600), run_id,
+                ))
+    if state_rows:
+        execute_values(
+            cur,
+            "INSERT INTO fact_order_state_history "
+            "(order_hk, order_id, from_status, to_status, transition_ts, lag_seconds, run_id) "
+            "VALUES %s",
+            state_rows,
+            page_size=500,
+        )
+    emit(f"  → {len(state_rows)} state transition rows")
 
     # ── fact_sensor_hourly ────────────────────────────────────────────────────
     emit("  Building fact_sensor_hourly ...")
     sensors_df = silver.get("sensors_df", pd.DataFrame())
-    sensor_count = 0
+    sensor_rows = []
     thresholds = {
         "temperature": 400.0, "humidity": 90.0,
         "fryer_timer": 30.0, "co2": 2000.0, "noise_db": 90.0,
@@ -303,24 +336,27 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
                 except Exception:
                     date_key = int(today.strftime("%Y%m%d"))
                     hour = 0
-                cur.execute(
-                    "INSERT INTO fact_sensor_hourly "
-                    "(kitchen_key, date_key, hour, sensor_type, reading_count, anomaly_count, avg_value, max_value, run_id) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                    (
-                        k_key, date_key, hour, s_type, len(sgroup), anomaly_count,
-                        round(float(sgroup["value"].mean()), 2),
-                        round(float(sgroup["value"].max()), 2),
-                        run_id,
-                    ),
-                )
-                sensor_count += 1
-    emit(f"  → {sensor_count} sensor_hourly rows")
+                sensor_rows.append((
+                    k_key, date_key, hour, s_type, len(sgroup), anomaly_count,
+                    round(float(sgroup["value"].mean()), 2),
+                    round(float(sgroup["value"].max()), 2),
+                    run_id,
+                ))
+    if sensor_rows:
+        execute_values(
+            cur,
+            "INSERT INTO fact_sensor_hourly "
+            "(kitchen_key, date_key, hour, sensor_type, reading_count, anomaly_count, avg_value, max_value, run_id) "
+            "VALUES %s",
+            sensor_rows,
+            page_size=200,
+        )
+    emit(f"  → {len(sensor_rows)} sensor_hourly rows")
 
     # ── fact_delivery_trip ────────────────────────────────────────────────────
     emit("  Building fact_delivery_trip (haversine distance) ...")
     gps_df = silver.get("gps_df", pd.DataFrame())
-    trip_count = 0
+    trip_rows = []
     if not gps_df.empty:
         for delivery_id, group in gps_df.groupby("delivery_id"):
             group = group.sort_values("event_timestamp")
@@ -343,18 +379,21 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
                 date_key = int(today.strftime("%Y%m%d"))
             avg_speed = float(group["speed_mph"].mean()) if "speed_mph" in group.columns else 0.0
             sla_breach = duration_min > 45.0
-            cur.execute(
-                "INSERT INTO fact_delivery_trip "
-                "(delivery_id, driver_key, zone_key, date_key, ping_count, distance_km, "
-                "duration_minutes, avg_speed_mph, sla_breach_flag, run_id) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (
-                    str(delivery_id), d_key, None, date_key, ping_count,
-                    round(dist_km, 3), duration_min, round(avg_speed, 2), sla_breach, run_id,
-                ),
-            )
-            trip_count += 1
-    emit(f"  → {trip_count} delivery trip rows")
+            trip_rows.append((
+                str(delivery_id), d_key, None, date_key, ping_count,
+                round(dist_km, 3), duration_min, round(avg_speed, 2), sla_breach, run_id,
+            ))
+    if trip_rows:
+        execute_values(
+            cur,
+            "INSERT INTO fact_delivery_trip "
+            "(delivery_id, driver_key, zone_key, date_key, ping_count, distance_km, "
+            "duration_minutes, avg_speed_mph, sla_breach_flag, run_id) "
+            "VALUES %s",
+            trip_rows,
+            page_size=100,
+        )
+    emit(f"  → {len(trip_rows)} delivery trip rows")
 
     conn.commit()
     cur.close()
@@ -368,8 +407,8 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
         "dim_delivery_zone": len(zone_key_map),
         "dim_customer": len(customer_key_map),
         "dim_menu_item": len(menu_key_map),
-        "fact_order": fact_orders_count,
-        "fact_order_state_history": state_count,
-        "fact_sensor_hourly": sensor_count,
-        "fact_delivery_trip": trip_count,
+        "fact_order": len(fact_order_rows),
+        "fact_order_state_history": len(state_rows),
+        "fact_sensor_hourly": len(sensor_rows),
+        "fact_delivery_trip": len(trip_rows),
     }

@@ -3,6 +3,7 @@ import hashlib
 import json
 import pandas as pd
 from datetime import datetime
+from psycopg2.extras import execute_values
 
 
 def _hk(value: str) -> str:
@@ -69,50 +70,65 @@ def load_data_vault(norm_df: pd.DataFrame, conn, run_id: str, emit) -> dict:
     emit("  Loading Data Vault 2.0 hubs + satellites ...")
     cur = conn.cursor()
     now = datetime.utcnow()
-    hub_orders = 0
-    hub_customers = 0
-    sats = 0
+
+    hub_order_rows = []
+    hub_customer_rows = []
+    sat_detail_rows = []
 
     for _, r in norm_df.iterrows():
         o_hk = _hk(f"{r['platform']}:{r['order_id']}")
-        cur.execute(
-            "INSERT INTO silver_hub_order (order_hk, order_id, platform, load_ts, run_id) "
-            "VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            (o_hk, r["order_id"], r["platform"], now, run_id),
-        )
-        hub_orders += 1
+        hub_order_rows.append((o_hk, r["order_id"], r["platform"], now, run_id))
 
         email = r.get("customer_email")
         if email and "@" in str(email):
             c_hk = _hk(email.lower())
+            c_email = email
         else:
             c_hk = _hk(f"{r['platform']}:{r.get('customer_ref', '')}")
-        cur.execute(
-            "INSERT INTO silver_hub_customer (customer_hk, email, load_ts, run_id) "
-            "VALUES (%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            (c_hk, email if email and "@" in str(email) else None, now, run_id),
-        )
-        hub_customers += 1
+            c_email = None
+        hub_customer_rows.append((c_hk, c_email, now, run_id))
 
         items_val = r.get("items")
         items_json = json.dumps(items_val) if items_val is not None else None
         placed_at = str(r.get("placed_at", ""))
-        cur.execute(
-            "INSERT INTO silver_sat_order_details "
-            "(order_hk, order_id, platform, kitchen_id, brand, total_cents, currency, "
-            "items, placed_at, load_ts, run_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-            (
-                o_hk, r["order_id"], r["platform"], r.get("kitchen_id"), r.get("brand"),
-                int(r["total_cents"]) if pd.notna(r.get("total_cents")) else 0,
-                r.get("currency", "USD"), items_json, placed_at, now, run_id,
-            ),
-        )
-        sats += 1
+        sat_detail_rows.append((
+            o_hk, r["order_id"], r["platform"], r.get("kitchen_id"), r.get("brand"),
+            int(r["total_cents"]) if pd.notna(r.get("total_cents")) else 0,
+            r.get("currency", "USD"), items_json, placed_at, now, run_id,
+        ))
+
+    execute_values(
+        cur,
+        "INSERT INTO silver_hub_order (order_hk, order_id, platform, load_ts, run_id) "
+        "VALUES %s ON CONFLICT DO NOTHING",
+        hub_order_rows,
+        page_size=200,
+    )
+    execute_values(
+        cur,
+        "INSERT INTO silver_hub_customer (customer_hk, email, load_ts, run_id) "
+        "VALUES %s ON CONFLICT DO NOTHING",
+        hub_customer_rows,
+        page_size=200,
+    )
+    execute_values(
+        cur,
+        "INSERT INTO silver_sat_order_details "
+        "(order_hk, order_id, platform, kitchen_id, brand, total_cents, currency, "
+        "items, placed_at, load_ts, run_id) VALUES %s",
+        sat_detail_rows,
+        page_size=200,
+    )
 
     conn.commit()
     cur.close()
-    emit(f"  → {hub_orders} hub_order, {hub_customers} hub_customer, {sats} sat_order_details rows")
-    return {"hub_orders": hub_orders, "hub_customers": hub_customers, "sat_details": sats}
+    emit(f"  → {len(hub_order_rows)} hub_order, {len(hub_customer_rows)} hub_customer, "
+         f"{len(sat_detail_rows)} sat_order_details rows")
+    return {
+        "hub_orders": len(hub_order_rows),
+        "hub_customers": len(hub_customer_rows),
+        "sat_details": len(sat_detail_rows),
+    }
 
 
 def validate_gps(gps_df: pd.DataFrame, emit) -> pd.DataFrame:
@@ -152,6 +168,8 @@ def resolve_identity(norm_df: pd.DataFrame, conn, run_id: str, emit) -> dict:
     now = datetime.utcnow()
     exact = 0
     fallback = 0
+    rows = []
+
     for _, r in norm_df.iterrows():
         email = r.get("customer_email")
         if email and "@" in str(email):
@@ -159,21 +177,26 @@ def resolve_identity(norm_df: pd.DataFrame, conn, run_id: str, emit) -> dict:
             method = "exact_email"
             confidence = 1.0
             exact += 1
+            c_email = email
         else:
             c_hk = _hk(f"{r['platform']}:{r.get('customer_ref', '')}")
             method = "platform_fallback"
             confidence = 0.5
             fallback += 1
-        cur.execute(
-            "INSERT INTO silver_identity_bridge "
-            "(customer_hk, platform, platform_id, email, match_confidence, match_method, load_ts, run_id) "
-            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-            (
-                c_hk, r["platform"], str(r.get("customer_ref", "")),
-                email if email and "@" in str(email) else None,
-                confidence, method, now, run_id,
-            ),
-        )
+            c_email = None
+        rows.append((
+            c_hk, r["platform"], str(r.get("customer_ref", "")),
+            c_email, confidence, method, now, run_id,
+        ))
+
+    execute_values(
+        cur,
+        "INSERT INTO silver_identity_bridge "
+        "(customer_hk, platform, platform_id, email, match_confidence, match_method, load_ts, run_id) "
+        "VALUES %s",
+        rows,
+        page_size=200,
+    )
     conn.commit()
     cur.close()
     emit(f"  → {exact} exact_email matches, {fallback} platform_fallback matches")
