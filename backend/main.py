@@ -63,7 +63,7 @@ def _emit(run_id: str, event: dict):
 
 
 def _run_pipeline(run_id: str):
-    global _active_run_id
+    global _active_run_id  # noqa: PLW0603
     conn = None
     acquired = _pipeline_semaphore.acquire(blocking=True, timeout=5)
     if not acquired:
@@ -268,7 +268,6 @@ def _run_pipeline(run_id: str):
         with _run_lock:
             _run_done[run_id] = True
         _pipeline_semaphore.release()
-        global _active_run_id
         _active_run_id = None
 
 
