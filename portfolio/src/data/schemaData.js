@@ -104,8 +104,8 @@ export const SCHEMA_NODES = [
         { name: 'avg_prep_minutes', type: 'INTEGER', role: 'col' },
       ],
       sampleRows: [
-        { brand_name: 'Burger Beast', cuisine_type: 'American', avg_prep_minutes: 8 },
-        { brand_name: 'Sushi Storm', cuisine_type: 'Japanese', avg_prep_minutes: 18 },
+        { brand_name: 'Buffalo Bayou BBQ', cuisine_type: 'American', avg_prep_minutes: 8 },
+        { brand_name: 'Montrose Sushi', cuisine_type: 'Japanese', avg_prep_minutes: 18 },
       ],
     },
   },
@@ -202,8 +202,8 @@ export const SCHEMA_NODES = [
         { name: 'is_current', type: 'BOOLEAN', role: 'col' },
       ],
       sampleRows: [
-        { item_name: 'Smash Burger', brand: 'Burger Beast', price_cents: 899, is_current: true },
-        { item_name: 'Brisket Plate', brand: 'BBQ Barn', price_cents: 1499, is_current: true },
+        { item_name: 'Bayou Brisket Burger', brand: 'Buffalo Bayou BBQ', price_cents: 899, is_current: true },
+        { item_name: 'Brisket Plate', brand: 'Hill Country Smoke', price_cents: 1499, is_current: true },
       ],
     },
   },

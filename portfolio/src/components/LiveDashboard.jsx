@@ -64,12 +64,12 @@ function EmptyState() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>⚡</div>
-      <p style={{ color: '#2D4060', fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>No data yet — run the pipeline first</p>
+      <p style={{ color: '#2D4060', fontSize: 12, fontFamily: "'JetBrains Mono', monospace", textAlign: 'center' }}>Nothing here yet — hit Run Pipeline,<br />takes ~60s, writes real rows to PostgreSQL.</p>
       <button
         onClick={() => navigate('/')}
-        style={{ color: '#00C2FF', fontSize: 11, marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: "'JetBrains Mono', monospace" }}
+        style={{ color: '#0EA5E9', fontSize: 11, marginTop: 10, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: "'JetBrains Mono', monospace" }}
       >
-        Go to Pipeline Orchestrator
+        → Run Pipeline
       </button>
     </div>
   )

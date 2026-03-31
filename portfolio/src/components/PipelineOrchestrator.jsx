@@ -361,17 +361,20 @@ export default function PipelineOrchestrator() {
             Pipeline<br />
             <span style={{ color: '#00C2FF' }}>Orchestrator</span>
           </h1>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', textAlign: 'center', marginBottom: 28, maxWidth: 480 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#6B82A8', textAlign: 'center', marginBottom: 6, maxWidth: 480 }}>
             Bronze → Silver → Gold · Data Vault 2.0 · Star Schema · Identity Resolution
+          </p>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#2D4060', textAlign: 'center', marginBottom: 28, maxWidth: 520 }}>
+            Modelled on the Texas ghost kitchen market — 50 virtual dark kitchens across Houston, Dallas, Austin and 7 other TX cities
           </p>
 
           {/* Stats strip */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, justifyContent: 'center', marginBottom: 32 }}>
             {[
-              { v: '10,550', l: 'events' },
-              { v: '50', l: 'kitchens' },
-              { v: '47', l: 'assertions' },
-              { v: '15', l: 'SQL views' },
+              { v: '11,847', l: 'events / run' },
+              { v: '50', l: 'TX kitchens' },
+              { v: '43', l: 'DQ checks' },
+              { v: '12', l: 'Gold tables' },
             ].map(({ v, l }) => (
               <div key={l} style={{ textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 24, fontWeight: 800, color: '#00C2FF' }}>{v}</div>
@@ -401,7 +404,10 @@ export default function PipelineOrchestrator() {
             Executes a full data pipeline in the cloud · ~60 seconds · Results live for 48h
           </p>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2D4060', textAlign: 'center', marginTop: 4 }}>
-            Production: Apache Spark 3.5 + Delta Lake + Kafka · Demo: DuckDB + Python
+            Demo engine: DuckDB + Python — same medallion concepts, no JVM, fits a $5/mo container.
+          </p>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#1A2640', textAlign: 'center', marginTop: 3 }}>
+            Would migrate to Spark 3.5 + Delta Lake at &gt;10M daily events — that threshold hasn't landed yet.
           </p>
         </div>
       )}

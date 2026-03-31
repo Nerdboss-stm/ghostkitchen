@@ -4,16 +4,16 @@
 @tailwind utilities;
 
 :root {
-  --bg: #040912;
-  --surface: #070E1A;
-  --surface-2: #0C1525;
-  --border: #142038;
-  --border-bright: #1E3254;
-  --teal: #00C2FF;
-  --emerald: #00E5A0;
-  --amber: #FFB547;
-  --crimson: #FF3D57;
-  --violet: #7C5CFC;
+  --bg: #080D1A;
+  --surface: #0B1220;
+  --surface-2: #101828;
+  --border: #1A2640;
+  --border-bright: #243550;
+  --teal: #0EA5E9;
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --crimson: #EF4444;
+  --violet: #8B5CF6;
   --text-1: #D4E5FF;
   --text-2: #6B82A8;
   --text-3: #2D4060;

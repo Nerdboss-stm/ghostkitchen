@@ -23,11 +23,11 @@ CITY_CENTERS = {
     "PLN": (33.0198, -96.6989), "LBB": (33.5779, -101.8552),
 }
 _BP = [
-    ["Burger Beast", "Dragon Wok", "Pizza Planet"],
-    ["Taco Tornado", "Sushi Storm", "Burger Beast"],
-    ["Pasta Palace", "BBQ Barn", "Dragon Wok", "Salad Studio"],
-    ["Burger Beast", "Pizza Planet", "Taco Tornado", "BBQ Barn"],
-    ["Dragon Wok", "Sushi Storm", "Pasta Palace", "Salad Studio", "Burger Beast"],
+    ["Buffalo Bayou BBQ", "Mueller Poke Bowl", "Deep Ellum Pizza"],
+    ["East 7th Tacos", "Montrose Sushi", "Buffalo Bayou BBQ"],
+    ["Congress Ave Kitchen", "Hill Country Smoke", "Mueller Poke Bowl", "Barton Springs Greens"],
+    ["Buffalo Bayou BBQ", "Deep Ellum Pizza", "East 7th Tacos", "Hill Country Smoke"],
+    ["Mueller Poke Bowl", "Montrose Sushi", "Congress Ave Kitchen", "Barton Springs Greens", "Buffalo Bayou BBQ"],
 ]
 KITCHENS = []
 for _city, _abbrev in CITIES.items():
@@ -40,30 +40,30 @@ for _city, _abbrev in CITIES.items():
         })
 
 MENU_ITEMS = {
-    "Burger Beast": [
-        {"item_id": "BB-01", "name": "Smash Burger", "price": 8.99},
-        {"item_id": "BB-02", "name": "Double Smash", "price": 12.99},
+    "Buffalo Bayou BBQ": [
+        {"item_id": "BB-01", "name": "Bayou Brisket Burger", "price": 8.99},
+        {"item_id": "BB-02", "name": "Double Bayou", "price": 12.99},
         {"item_id": "BB-03", "name": "Fries", "price": 3.99},
     ],
-    "Dragon Wok": [
-        {"item_id": "DW-01", "name": "Kung Pao Chicken", "price": 11.99},
-        {"item_id": "DW-02", "name": "Fried Rice", "price": 7.99},
+    "Mueller Poke Bowl": [
+        {"item_id": "DW-01", "name": "Mueller Bowl Classic", "price": 11.99},
+        {"item_id": "DW-02", "name": "Poke Bowl", "price": 7.99},
     ],
-    "Pizza Planet": [
+    "Deep Ellum Pizza": [
         {"item_id": "PP-01", "name": "Margherita", "price": 10.99},
         {"item_id": "PP-02", "name": "Pepperoni", "price": 12.99},
     ],
-    "Taco Tornado": [
+    "East 7th Tacos": [
         {"item_id": "TT-01", "name": "Street Tacos (3)", "price": 7.99},
         {"item_id": "TT-02", "name": "Burrito Bowl", "price": 9.99},
     ],
-    "Sushi Storm": [
+    "Montrose Sushi": [
         {"item_id": "SS-01", "name": "California Roll", "price": 8.99},
         {"item_id": "SS-02", "name": "Salmon Nigiri (4)", "price": 12.99},
     ],
-    "Pasta Palace": [{"item_id": "PA-01", "name": "Spaghetti Bolognese", "price": 10.99}],
-    "BBQ Barn": [{"item_id": "BQ-01", "name": "Brisket Plate", "price": 14.99}],
-    "Salad Studio": [{"item_id": "SL-01", "name": "Caesar Salad", "price": 8.99}],
+    "Congress Ave Kitchen": [{"item_id": "PA-01", "name": "Congress Pasta", "price": 10.99}],
+    "Hill Country Smoke": [{"item_id": "BQ-01", "name": "Brisket Plate", "price": 14.99}],
+    "Barton Springs Greens": [{"item_id": "SL-01", "name": "Barton Greens Bowl", "price": 8.99}],
 }
 
 SENSOR_TYPES = ["temperature", "humidity", "fryer_timer", "co2", "noise_db"]

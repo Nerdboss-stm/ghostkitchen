@@ -24,11 +24,11 @@ CITY_CENTERS = {
     "PLN": (33.0198, -96.6989), "LBB": (33.5779, -101.8552),
 }
 _BP = [
-    ["Burger Beast", "Dragon Wok", "Pizza Planet"],
-    ["Taco Tornado", "Sushi Storm", "Burger Beast"],
-    ["Pasta Palace", "BBQ Barn", "Dragon Wok", "Salad Studio"],
-    ["Burger Beast", "Pizza Planet", "Taco Tornado", "BBQ Barn"],
-    ["Dragon Wok", "Sushi Storm", "Pasta Palace", "Salad Studio", "Burger Beast"],
+    ["Buffalo Bayou BBQ", "Mueller Poke Bowl", "Deep Ellum Pizza"],
+    ["East 7th Tacos", "Montrose Sushi", "Buffalo Bayou BBQ"],
+    ["Congress Ave Kitchen", "Hill Country Smoke", "Mueller Poke Bowl", "Barton Springs Greens"],
+    ["Buffalo Bayou BBQ", "Deep Ellum Pizza", "East 7th Tacos", "Hill Country Smoke"],
+    ["Mueller Poke Bowl", "Montrose Sushi", "Congress Ave Kitchen", "Barton Springs Greens", "Buffalo Bayou BBQ"],
 ]
 KITCHENS_REF = []
 for _city, _abbrev in CITIES.items():
@@ -41,21 +41,21 @@ for _city, _abbrev in CITIES.items():
         })
 
 BRANDS_META = {
-    "Burger Beast": ("American", 8), "Dragon Wok": ("Chinese", 12),
-    "Pizza Planet": ("Italian", 15), "Taco Tornado": ("Mexican", 10),
-    "Sushi Storm": ("Japanese", 18), "Pasta Palace": ("Italian", 14),
-    "BBQ Barn": ("BBQ", 20), "Salad Studio": ("Healthy", 7),
+    "Buffalo Bayou BBQ": ("American", 8), "Mueller Poke Bowl": ("Chinese", 12),
+    "Deep Ellum Pizza": ("Italian", 15), "East 7th Tacos": ("Mexican", 10),
+    "Montrose Sushi": ("Japanese", 18), "Congress Ave Kitchen": ("Italian", 14),
+    "Hill Country Smoke": ("BBQ", 20), "Barton Springs Greens": ("Healthy", 7),
 }
 VEHICLE_TYPES = ["bicycle", "scooter", "car"]
 MENU_ITEMS_REF = {
-    "Burger Beast": [("BB-01", "Smash Burger", 899), ("BB-02", "Double Smash", 1299), ("BB-03", "Fries", 399)],
-    "Dragon Wok": [("DW-01", "Kung Pao Chicken", 1199), ("DW-02", "Fried Rice", 799)],
-    "Pizza Planet": [("PP-01", "Margherita", 1099), ("PP-02", "Pepperoni", 1299)],
-    "Taco Tornado": [("TT-01", "Street Tacos (3)", 799), ("TT-02", "Burrito Bowl", 999)],
-    "Sushi Storm": [("SS-01", "California Roll", 899), ("SS-02", "Salmon Nigiri (4)", 1299)],
-    "Pasta Palace": [("PA-01", "Spaghetti Bolognese", 1099)],
-    "BBQ Barn": [("BQ-01", "Brisket Plate", 1499)],
-    "Salad Studio": [("SL-01", "Caesar Salad", 899)],
+    "Buffalo Bayou BBQ": [("BB-01", "Bayou Brisket Burger", 899), ("BB-02", "Double Bayou", 1299), ("BB-03", "Fries", 399)],
+    "Mueller Poke Bowl": [("DW-01", "Mueller Bowl Classic", 1199), ("DW-02", "Poke Bowl", 799)],
+    "Deep Ellum Pizza": [("PP-01", "Margherita", 1099), ("PP-02", "Pepperoni", 1299)],
+    "East 7th Tacos": [("TT-01", "Street Tacos (3)", 799), ("TT-02", "Burrito Bowl", 999)],
+    "Montrose Sushi": [("SS-01", "California Roll", 899), ("SS-02", "Salmon Nigiri (4)", 1299)],
+    "Congress Ave Kitchen": [("PA-01", "Congress Pasta", 1099)],
+    "Hill Country Smoke": [("BQ-01", "Brisket Plate", 1499)],
+    "Barton Springs Greens": [("SL-01", "Barton Greens Bowl", 899)],
 }
 
 
