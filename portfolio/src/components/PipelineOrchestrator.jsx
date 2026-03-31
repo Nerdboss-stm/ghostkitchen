@@ -179,12 +179,18 @@ function DoneOverlay({ stats, duration, onViewDashboard, onRunAgain }) {
 
 export default function PipelineOrchestrator() {
   const [phase, setPhase] = useState('idle') // idle | running | done
+  const phaseRef = useRef('idle') // sync ref to avoid stale-closure bug in SSE callbacks
   const [stageEvents, setStageEvents] = useState({})
   const [activeStage, setActiveStage] = useState(null)
   const [terminalLines, setTerminalLines] = useState([])
   const [doneData, setDoneData] = useState(null)
   const terminalRef = useRef(null)
   const stopStreamRef = useRef(null)
+
+  const setPhaseSync = useCallback((p) => {
+    phaseRef.current = p
+    setPhase(p)
+  }, [])
 
   const addTerminalLine = useCallback((line, color = '#8888aa') => {
     setTerminalLines((prev) => [...prev.slice(-80), { line, color, id: Date.now() + Math.random() }])
@@ -196,7 +202,7 @@ export default function PipelineOrchestrator() {
   }, [])
 
   const handleRun = async () => {
-    setPhase('running')
+    setPhaseSync('running')
     setStageEvents({})
     setActiveStage('GENERATE')
     setTerminalLines([])
@@ -212,12 +218,12 @@ export default function PipelineOrchestrator() {
         (event) => {
           if (event.stage === 'DONE') {
             setDoneData(event)
-            setPhase('done')
+            setPhaseSync('done')
             addTerminalLine('✓ Pipeline completed successfully', '#00ff88')
             return
           }
           if (event.stage === 'ERROR') {
-            setPhase('idle')
+            setPhaseSync('idle')
             addTerminalLine(`✗ Error: ${event.error}`, '#ff4466')
             return
           }
@@ -237,11 +243,12 @@ export default function PipelineOrchestrator() {
           }
         },
         () => {
-          if (phase !== 'done') setPhase('idle')
+          // Use ref (not state) to avoid stale closure resetting to idle after DONE
+          if (phaseRef.current !== 'done') setPhaseSync('idle')
         }
       )
     } catch (err) {
-      setPhase('idle')
+      setPhaseSync('idle')
       addTerminalLine(`✗ Failed to connect: ${err.message}`, '#ff4466')
     }
   }
@@ -314,7 +321,7 @@ export default function PipelineOrchestrator() {
               stats={doneData?.stats}
               duration={doneData?.duration_s}
               onViewDashboard={() => document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })}
-              onRunAgain={() => { setPhase('idle'); setDoneData(null) }}
+              onRunAgain={() => { setPhaseSync('idle'); setDoneData(null) }}
             />
           )}
 

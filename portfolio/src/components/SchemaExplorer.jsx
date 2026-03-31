@@ -69,7 +69,33 @@ function DimNode({ data, selected }) {
   )
 }
 
-const nodeTypes = { factNode: FactNode, dimNode: DimNode }
+// ── Custom node: Silver Vault ─────────────────────────────────────────────────
+function SilverNode({ data, selected }) {
+  return (
+    <div
+      className={`rounded-xl border cursor-pointer transition-all duration-200 px-3 py-2 ${
+        selected
+          ? 'border-[#9945ff] shadow-[0_0_20px_rgba(153,69,255,0.5)]'
+          : 'border-[#9945ff40] shadow-[0_0_10px_rgba(153,69,255,0.1)]'
+      }`}
+      style={{ background: '#0d0d24', minWidth: 140 }}
+    >
+      <Handle type="source" position={Position.Bottom} style={{ background: '#9945ff', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Top} style={{ background: '#9945ff', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Left} style={{ background: '#9945ff', border: 'none', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#9945ff', border: 'none', width: 6, height: 6 }} />
+      <div className="flex items-center justify-between mb-0.5">
+        <span className="text-[8px] font-mono text-[#9945ff] font-bold tracking-widest uppercase bg-[#9945ff10] border border-[#9945ff20] px-1.5 py-0.5 rounded">
+          VAULT
+        </span>
+      </div>
+      <div className="text-xs font-bold text-[#9945ff] font-mono">{data.label}</div>
+      <div className="text-[9px] text-[#4a4a6a] mt-0.5">{data.rowCount} rows</div>
+    </div>
+  )
+}
+
+const nodeTypes = { factNode: FactNode, dimNode: DimNode, silverNode: SilverNode }
 
 const edgeStyle = {
   stroke: '#00d4ff',
@@ -83,7 +109,8 @@ function SchemaPanel({ node, onClose }) {
   if (!d) return null
 
   const isFact = node.type === 'factNode'
-  const color = isFact ? '#ffaa00' : '#00d4ff'
+  const isSilver = node.type === 'silverNode'
+  const color = isFact ? '#ffaa00' : isSilver ? '#9945ff' : '#00d4ff'
 
   const roleIcon = (role) => {
     if (role === 'pk') return <Key size={10} className="text-[#ffaa00]" />
@@ -109,7 +136,7 @@ function SchemaPanel({ node, onClose }) {
                 className="text-[10px] font-mono font-bold tracking-widest uppercase px-2 py-0.5 rounded"
                 style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}
               >
-                {isFact ? 'FACT TABLE' : 'DIMENSION'}
+                {isFact ? 'FACT TABLE' : isSilver ? 'VAULT' : 'DIMENSION'}
               </span>
               {d.scdType && (
                 <span className="text-[10px] font-mono text-[#4a4a6a] border border-[#1e1e3f] px-2 py-0.5 rounded">
