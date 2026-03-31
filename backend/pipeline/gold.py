@@ -74,12 +74,14 @@ def build_gold(silver: dict, conn, run_id: str, emit) -> dict:
     today = date.today()
     now = datetime.utcnow()
 
-    gold_tables = [
-        "fact_order", "fact_order_state_history", "fact_sensor_hourly", "fact_delivery_trip",
+    # Dims + sensor aggregate reset each run (reference/aggregate data)
+    # Fact order tables ACCUMULATE across runs — each run adds new orders
+    reset_tables = [
+        "fact_sensor_hourly",
         "dim_date", "dim_time", "dim_kitchen", "dim_brand", "dim_driver",
         "dim_delivery_zone", "dim_customer", "dim_menu_item", "bridge_kitchen_brand",
     ]
-    for t in gold_tables:
+    for t in reset_tables:
         cur.execute(f"DELETE FROM {t}")
 
     # ── dim_date ──────────────────────────────────────────────────────────────

@@ -498,3 +498,43 @@ async def kitchen_capacity():
             LIMIT 20
         """)
     return [dict(r) for r in rows]
+
+
+@app.get("/dashboard/lineage")
+async def lineage():
+    """Return row counts for all layers — used by the Data Lineage screen."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async def count(table: str) -> int:
+            try:
+                row = await conn.fetchrow(f"SELECT COUNT(*) AS n FROM {table}")
+                return row["n"] if row else 0
+            except Exception:
+                return 0
+
+        bronze = {
+            "bronze_orders":   await count("bronze_orders"),
+            "bronze_sensors":  await count("bronze_sensors"),
+            "bronze_gps":      await count("bronze_gps"),
+            "bronze_menu_cdc": await count("bronze_menu_cdc"),
+        }
+        silver = {
+            "hub_order":              await count("hub_order"),
+            "hub_customer":           await count("hub_customer"),
+            "hub_kitchen":            await count("hub_kitchen"),
+            "silver_orders_norm":     await count("silver_orders_norm"),
+            "silver_sensors":         await count("silver_sensors"),
+            "silver_gps":             await count("silver_gps"),
+            "silver_identity_bridge": await count("silver_identity_bridge"),
+        }
+        gold = {
+            "fact_order":               await count("fact_order"),
+            "fact_order_state_history": await count("fact_order_state_history"),
+            "fact_sensor_hourly":       await count("fact_sensor_hourly"),
+            "fact_delivery_trip":       await count("fact_delivery_trip"),
+            "dim_kitchen":              await count("dim_kitchen"),
+            "dim_customer":             await count("dim_customer"),
+            "dim_driver":               await count("dim_driver"),
+            "dim_date":                 await count("dim_date"),
+        }
+    return {"bronze": bronze, "silver": silver, "gold": gold}

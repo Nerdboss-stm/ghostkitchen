@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
   CartesianGrid, XAxis, YAxis, Tooltip, ReferenceLine, Legend,
@@ -11,35 +12,35 @@ const CHART_STYLE = {
   fontFamily: "'JetBrains Mono', monospace",
   fontSize: 11,
 }
-const AXIS_TICK = { fill: '#4a4a6a', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }
-const GRID_COLOR = '#1e1e3f'
+const AXIS_TICK = { fill: '#2D4060', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }
+const GRID_COLOR = '#142038'
 const TOOLTIP_STYLE = {
-  background: '#0d0d24',
-  border: '1px solid #1e1e3f',
+  background: '#0C1525',
+  border: '1px solid #1E3254',
   borderRadius: 8,
-  color: '#e8e8ff',
+  color: '#D4E5FF',
   fontSize: 11,
   fontFamily: "'JetBrains Mono', monospace",
 }
 
-function KpiCard({ label, value, sub, color = '#00d4ff', delta, icon: Icon }) {
+function KpiCard({ label, value, sub, color = '#00C2FF', delta, icon: Icon }) {
   return (
-    <div className="gk-card p-5" style={{ borderColor: `${color}30`, boxShadow: `0 0 20px ${color}05, inset 0 1px 0 ${color}10` }}>
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-xs text-[#4a4a6a] font-mono uppercase tracking-wider">{label}</span>
-        {Icon && <Icon size={14} style={{ color }} />}
+    <div className="gk-card" style={{ padding: 20, borderColor: `${color}30`, boxShadow: `0 0 24px ${color}05, inset 0 1px 0 ${color}10` }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+        {Icon && <Icon size={13} style={{ color }} />}
       </div>
-      <div className="text-3xl font-bold mb-1" style={{ color }}>
-        {value ?? <span className="text-[#1e1e3f] animate-pulse">—</span>}
+      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 30, fontWeight: 800, marginBottom: 4, color }}>
+        {value ?? <span style={{ color: '#142038' }}>—</span>}
       </div>
-      <div className="flex items-center gap-2">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {delta !== undefined && (
-          <span className={`text-xs flex items-center gap-0.5 ${delta >= 0 ? 'text-[#00ff88]' : 'text-[#ff4466]'}`}>
+          <span style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 3, color: delta >= 0 ? '#00E5A0' : '#FF3D57' }}>
             {delta >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
             {Math.abs(delta)}%
           </span>
         )}
-        {sub && <span className="text-xs text-[#4a4a6a]">{sub}</span>}
+        {sub && <span style={{ fontSize: 11, color: '#2D4060' }}>{sub}</span>}
       </div>
     </div>
   )
@@ -47,65 +48,63 @@ function KpiCard({ label, value, sub, color = '#00d4ff', delta, icon: Icon }) {
 
 function SectionTitle({ children }) {
   return (
-    <h3 className="text-sm font-semibold text-[#8888aa] mb-4 font-mono uppercase tracking-wider flex items-center gap-2">
-      <span className="w-1 h-4 rounded-full bg-[#00d4ff] inline-block" />
+    <h3 style={{
+      fontFamily: 'Syne, sans-serif', fontWeight: 600, fontSize: 12,
+      color: '#6B82A8', marginBottom: 14, textTransform: 'uppercase',
+      letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 8,
+    }}>
+      <span style={{ width: 3, height: 14, borderRadius: 2, background: '#00C2FF', display: 'inline-block' }} />
       {children}
     </h3>
   )
 }
 
 function EmptyState() {
+  const navigate = useNavigate()
   return (
-    <div className="flex flex-col items-center justify-center h-48 text-center">
-      <div className="text-4xl mb-3">⚡</div>
-      <p className="text-[#4a4a6a] text-sm">No data yet — run the pipeline first</p>
-      <a href="#pipeline" className="text-[#00d4ff] text-xs mt-2 hover:underline">
-        ↑ Go to Pipeline Orchestrator
-      </a>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, textAlign: 'center' }}>
+      <div style={{ fontSize: 32, marginBottom: 10 }}>⚡</div>
+      <p style={{ color: '#2D4060', fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>No data yet — run the pipeline first</p>
+      <button
+        onClick={() => navigate('/')}
+        style={{ color: '#00C2FF', fontSize: 11, marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontFamily: "'JetBrains Mono', monospace" }}
+      >
+        Go to Pipeline Orchestrator
+      </button>
     </div>
   )
 }
 
-// ── Platform donut ────────────────────────────────────────────────────────────
-const PLATFORM_COLORS = { uber_eats: '#00d4ff', doordash: '#9945ff', own_app: '#00ff88' }
+const PLATFORM_COLORS = { uber_eats: '#00C2FF', doordash: '#7C5CFC', own_app: '#00E5A0' }
 const PLATFORM_LABELS = { uber_eats: 'Uber Eats', doordash: 'DoorDash', own_app: 'OwnApp' }
 
 function PlatformDonut({ data }) {
   if (!data?.length) return <EmptyState />
   const total = data.reduce((s, d) => s + Number(d.order_count), 0)
   return (
-    <div className="flex items-center gap-6">
-      <ResponsiveContainer width={160} height={160}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      <ResponsiveContainer width={150} height={150}>
         <PieChart style={CHART_STYLE}>
-          <Pie
-            data={data}
-            dataKey="order_count"
-            nameKey="platform"
-            cx="50%"
-            cy="50%"
-            innerRadius={45}
-            outerRadius={70}
-            strokeWidth={0}
-          >
+          <Pie data={data} dataKey="order_count" nameKey="platform" cx="50%" cy="50%" innerRadius={42} outerRadius={65} strokeWidth={0}>
             {data.map((entry) => (
-              <Cell key={entry.platform} fill={PLATFORM_COLORS[entry.platform] || '#4a4a6a'} />
+              <Cell key={entry.platform} fill={PLATFORM_COLORS[entry.platform] || '#2D4060'} />
             ))}
           </Pie>
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [v.toLocaleString(), 'orders']} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex-1 space-y-3">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {data.map((d) => {
           const pct = total ? Math.round((d.order_count / total) * 100) : 0
-          const color = PLATFORM_COLORS[d.platform] || '#4a4a6a'
+          const color = PLATFORM_COLORS[d.platform] || '#2D4060'
           return (
             <div key={d.platform}>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-mono" style={{ color }}>{PLATFORM_LABELS[d.platform] || d.platform}</span>
-                <span className="text-[#4a4a6a]">{d.order_count?.toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", color }}>{PLATFORM_LABELS[d.platform] || d.platform}</span>
+                <span style={{ color: '#2D4060', fontFamily: "'JetBrains Mono', monospace" }}>{d.order_count?.toLocaleString()}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-[#1e1e3f]">
-                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+              <div style={{ height: 5, borderRadius: 3, background: '#142038' }}>
+                <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.5s', width: `${pct}%`, background: color }} />
               </div>
             </div>
           )
@@ -115,15 +114,14 @@ function PlatformDonut({ data }) {
   )
 }
 
-// ── Delivery zone bar ─────────────────────────────────────────────────────────
 function DeliveryBar({ data }) {
   if (!data?.length) return <EmptyState />
   const sorted = [...data].sort((a, b) => Number(a.avg_duration_min) - Number(b.avg_duration_min)).slice(0, 10)
   const barColor = (v) => {
     const n = Number(v)
-    if (n > 43) return '#ff4466'
-    if (n > 35) return '#ffaa00'
-    return '#00d4ff'
+    if (n > 43) return '#FF3D57'
+    if (n > 35) return '#FFB547'
+    return '#00C2FF'
   }
   return (
     <ResponsiveContainer width="100%" height={220} style={CHART_STYLE}>
@@ -132,7 +130,7 @@ function DeliveryBar({ data }) {
         <XAxis dataKey="zone_id" tick={{ ...AXIS_TICK, fontSize: 9 }} tickLine={false} axisLine={false} />
         <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
         <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v} min`, 'Avg duration']} />
-        <ReferenceLine y={45} stroke="#ff4466" strokeDasharray="4 2" label={{ value: 'SLA 45m', fill: '#ff4466', fontSize: 9 }} />
+        <ReferenceLine y={45} stroke="#FF3D57" strokeDasharray="4 2" label={{ value: 'SLA 45m', fill: '#FF3D57', fontSize: 9 }} />
         {sorted.map((entry, i) => (
           <Bar key={i} dataKey="avg_duration_min" fill={barColor(entry.avg_duration_min)} radius={[3, 3, 0, 0]} isAnimationActive />
         ))}
@@ -141,8 +139,7 @@ function DeliveryBar({ data }) {
   )
 }
 
-// ── Sensor anomaly stacked bar ────────────────────────────────────────────────
-const SENSOR_COLORS = { temperature: '#ff4466', humidity: '#9945ff', co2: '#ffaa00', noise_db: '#00d4ff', fryer_timer: '#00ff88' }
+const SENSOR_COLORS = { temperature: '#FF3D57', humidity: '#7C5CFC', co2: '#FFB547', noise_db: '#00C2FF', fryer_timer: '#00E5A0' }
 
 function SensorBar({ data }) {
   if (!data?.length) return <EmptyState />
@@ -164,14 +161,13 @@ function SensorBar({ data }) {
         <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} />
         <Tooltip contentStyle={TOOLTIP_STYLE} />
         {types.map((t) => (
-          <Bar key={t} dataKey={t} stackId="a" fill={SENSOR_COLORS[t] || '#4a4a6a'} />
+          <Bar key={t} dataKey={t} stackId="a" fill={SENSOR_COLORS[t] || '#2D4060'} />
         ))}
       </BarChart>
     </ResponsiveContainer>
   )
 }
 
-// ── Revenue line ──────────────────────────────────────────────────────────────
 function RevenueLine({ data }) {
   if (!data?.length) return <EmptyState />
   const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-14)
@@ -179,13 +175,7 @@ function RevenueLine({ data }) {
     <ResponsiveContainer width="100%" height={220} style={CHART_STYLE}>
       <LineChart data={sorted} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid stroke={GRID_COLOR} />
-        <XAxis
-          dataKey="date"
-          tick={{ ...AXIS_TICK, fontSize: 9 }}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(v) => v?.slice(5)}
-        />
+        <XAxis dataKey="date" tick={{ ...AXIS_TICK, fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={(v) => v?.slice(5)} />
         <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 100).toFixed(0)}`} />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
@@ -194,43 +184,40 @@ function RevenueLine({ data }) {
             name === 'revenue_cents' ? 'Revenue' : 'Orders',
           ]}
         />
-        <Line type="monotone" dataKey="revenue_cents" stroke="#00d4ff" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="order_count" stroke="#9945ff" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
-        <Legend
-          formatter={(v) => v === 'revenue_cents' ? 'Revenue (batch)' : 'Order count'}
-          wrapperStyle={{ fontSize: 10, color: '#8888aa', fontFamily: "'JetBrains Mono'" }}
-        />
+        <Line type="monotone" dataKey="revenue_cents" stroke="#00C2FF" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="order_count" stroke="#7C5CFC" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+        <Legend formatter={(v) => v === 'revenue_cents' ? 'Revenue (batch)' : 'Order count'} wrapperStyle={{ fontSize: 10, color: '#6B82A8', fontFamily: "'JetBrains Mono'" }} />
       </LineChart>
     </ResponsiveContainer>
   )
 }
 
-// ── Top customers ─────────────────────────────────────────────────────────────
 function TopCustomers({ data }) {
   if (!data?.length) return <EmptyState />
   const max = Math.max(...data.map((d) => Number(d.ltv_cents)))
   return (
-    <div className="space-y-2 max-h-56 overflow-y-auto">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
       {data.map((c, i) => {
         const pct = max ? (Number(c.ltv_cents) / max) * 100 : 0
         const multi = Number(c.platform_count) >= 2
         return (
-          <div key={i} className={`flex items-center gap-3 py-2 px-3 rounded-lg ${multi ? 'border border-[#9945ff30] bg-[#9945ff08]' : ''}`}>
-            <span className="text-xs text-[#4a4a6a] font-mono w-4">{i + 1}</span>
-            <span className="text-xs font-mono text-[#e8e8ff] flex-1 truncate">
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6,
+            border: multi ? '1px solid rgba(124,92,252,0.2)' : '1px solid transparent',
+            background: multi ? 'rgba(124,92,252,0.05)' : 'transparent',
+          }}>
+            <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", width: 16 }}>{i + 1}</span>
+            <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#D4E5FF', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {c.customer_hk?.slice(0, 10)}...
             </span>
-            <div className="flex-1 h-1.5 bg-[#1e1e3f] rounded-full">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${pct}%`, background: multi ? '#9945ff' : '#00d4ff' }}
-              />
+            <div style={{ flex: 1, height: 5, background: '#142038', borderRadius: 3 }}>
+              <div style={{ height: '100%', borderRadius: 3, transition: 'width 0.5s', width: `${pct}%`, background: multi ? '#7C5CFC' : '#00C2FF' }} />
             </div>
-            <span className="text-xs text-[#4a4a6a] font-mono w-16 text-right">
+            <span style={{ fontSize: 10, color: '#2D4060', fontFamily: "'JetBrains Mono', monospace", width: 60, textAlign: 'right' }}>
               ${(Number(c.ltv_cents) / 100).toFixed(0)}
             </span>
             {multi && (
-              <span className="text-[8px] font-mono text-[#9945ff] border border-[#9945ff40] px-1.5 py-0.5 rounded flex-shrink-0">
+              <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#7C5CFC', border: '1px solid rgba(124,92,252,0.3)', padding: '2px 5px', borderRadius: 3, flexShrink: 0 }}>
                 {c.platforms}
               </span>
             )}
@@ -241,14 +228,13 @@ function TopCustomers({ data }) {
   )
 }
 
-// ── Kitchen capacity ──────────────────────────────────────────────────────────
 function KitchenCapacity({ data }) {
   if (!data?.length) return <EmptyState />
   const sorted = [...data].sort((a, b) => Number(b.utilization_pct) - Number(a.utilization_pct)).slice(0, 10)
   const barColor = (v) => {
-    if (Number(v) >= 80) return '#ff4466'
-    if (Number(v) >= 60) return '#ffaa00'
-    return '#00ff88'
+    if (Number(v) >= 80) return '#FF3D57'
+    if (Number(v) >= 60) return '#FFB547'
+    return '#00E5A0'
   }
   return (
     <ResponsiveContainer width="100%" height={220} style={CHART_STYLE}>
@@ -257,7 +243,7 @@ function KitchenCapacity({ data }) {
         <XAxis type="number" domain={[0, 100]} tick={AXIS_TICK} tickLine={false} axisLine={false} unit="%" />
         <YAxis type="category" dataKey="kitchen_id" tick={{ ...AXIS_TICK, fontSize: 9 }} tickLine={false} axisLine={false} width={60} />
         <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v}%`, 'Utilization']} />
-        <ReferenceLine x={100} stroke="#ff4466" strokeDasharray="4 2" />
+        <ReferenceLine x={100} stroke="#FF3D57" strokeDasharray="4 2" />
         {sorted.map((entry, i) => (
           <Bar key={i} dataKey="utilization_pct" fill={barColor(entry.utilization_pct)} radius={[0, 3, 3, 0]} />
         ))}
@@ -266,7 +252,6 @@ function KitchenCapacity({ data }) {
   )
 }
 
-// ── Main dashboard ────────────────────────────────────────────────────────────
 export default function LiveDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -297,117 +282,109 @@ export default function LiveDashboard() {
   const fmt = (cents) => cents != null ? `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0 })}` : null
 
   return (
-    <section id="dashboard" className="py-24 px-4 border-t border-[#1e1e3f]">
-      <div className="max-w-7xl mx-auto">
+    <div className="screen-scroll" style={{ padding: '20px 24px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12 }}>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-4xl font-bold text-[#e8e8ff]">Live Dashboard</h2>
-              <span className="flex items-center gap-1.5 text-xs font-mono text-[#00ff88] bg-[#00ff8815] border border-[#00ff8830] px-3 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-live-pulse" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 26, color: '#D4E5FF' }}>Live Dashboard</h2>
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 5, fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", color: '#00E5A0',
+                background: 'rgba(0,229,160,0.08)', border: '1px solid rgba(0,229,160,0.2)',
+                padding: '3px 10px', borderRadius: 20,
+              }}>
+                <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#00E5A0', display: 'inline-block' }} />
                 LIVE
               </span>
             </div>
-            <p className="text-[#4a4a6a] text-sm font-mono">
-              Auto-refreshes every 30s ·{' '}
-              {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : 'Connecting...'}
+            <p style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060' }}>
+              Auto-refreshes every 30s · {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : 'Connecting...'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-[#4a4a6a] border border-[#1e1e3f] px-3 py-1.5 rounded-lg">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060', border: '1px solid #142038', padding: '6px 12px', borderRadius: 8 }}>
               ⚡ Batch: daily · Speed: ~30s
             </span>
             <button
               onClick={refresh}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#1e1e3f] text-[#8888aa] hover:text-[#e8e8ff] hover:border-[#8888aa] transition-colors text-sm"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
+                border: '1px solid #142038', background: 'transparent', color: '#6B82A8',
+                fontSize: 12, fontFamily: 'Syne, sans-serif', cursor: 'pointer', transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#D4E5FF'; e.currentTarget.style.borderColor = '#6B82A8' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#6B82A8'; e.currentTarget.style.borderColor = '#142038' }}
             >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl border border-[#ff446640] bg-[#ff446610] text-[#ff4466] text-sm font-mono">
+          <div style={{ marginBottom: 20, padding: 14, borderRadius: 10, border: '1px solid rgba(255,61,87,0.3)', background: 'rgba(255,61,87,0.06)', color: '#FF3D57', fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>
             ⚠ {error} — Run the pipeline to populate data.
           </div>
         )}
 
         {/* KPI row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <KpiCard
-            label="Total Revenue"
-            value={fmt(kpis?.revenue_cents)}
-            sub="from all orders"
-            color="#00d4ff"
-            icon={TrendingUp}
-          />
-          <KpiCard
-            label="Orders"
-            value={kpis?.order_count?.toLocaleString()}
-            sub="normalised"
-            color="#9945ff"
-            icon={Zap}
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+          <KpiCard label="Total Revenue" value={fmt(kpis?.revenue_cents)} sub="from all orders" color="#00C2FF" icon={TrendingUp} />
+          <KpiCard label="Orders" value={kpis?.order_count?.toLocaleString()} sub="normalised" color="#7C5CFC" icon={Zap} />
           <KpiCard
             label="Avg Delivery"
             value={kpis?.avg_delivery_min ? `${kpis.avg_delivery_min}m` : null}
             sub="SLA: 45 min"
-            color={kpis?.avg_delivery_min > 43 ? '#ff4466' : '#00ff88'}
+            color={kpis?.avg_delivery_min > 43 ? '#FF3D57' : '#00E5A0'}
             icon={Clock}
           />
           <KpiCard
             label="SLA Breach"
             value={kpis?.sla_breach_pct != null ? `${kpis.sla_breach_pct}%` : null}
             sub="of deliveries"
-            color={kpis?.sla_breach_pct > 20 ? '#ff4466' : '#ffaa00'}
+            color={kpis?.sla_breach_pct > 20 ? '#FF3D57' : '#FFB547'}
           />
         </div>
 
         {/* Charts grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-          <div className="gk-card p-5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 14, marginBottom: 14 }}>
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Revenue Trend (last 14 days)</SectionTitle>
             <RevenueLine data={data?.revenue} />
           </div>
-
-          <div className="gk-card p-5">
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Orders by Platform</SectionTitle>
             <PlatformDonut data={data?.platforms} />
           </div>
-
-          <div className="gk-card p-5">
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Delivery Time by Zone</SectionTitle>
             <DeliveryBar data={data?.zones} />
           </div>
-
-          <div className="gk-card p-5">
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Sensor Anomalies by Kitchen</SectionTitle>
             <SensorBar data={data?.sensors} />
           </div>
-
-          <div className="gk-card p-5">
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Top Customers by LTV</SectionTitle>
             <TopCustomers data={data?.customers} />
           </div>
-
-          <div className="gk-card p-5">
+          <div className="gk-card" style={{ padding: 20 }}>
             <SectionTitle>Kitchen Capacity Utilisation</SectionTitle>
             <KitchenCapacity data={data?.capacity} />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="section-divider mb-6" />
-        <div className="flex flex-wrap justify-center gap-6 text-xs text-[#4a4a6a] font-mono">
-          <span>Lambda Architecture · Batch + Speed Layer</span>
-          <span>15 views · 11 batch + 4 Lambda UNION</span>
-          <span>Data Vault 2.0 · SHA-256 identity resolution</span>
-          <span>Built on Railway + Vercel</span>
+        <div className="section-divider" style={{ marginBottom: 14 }} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20, paddingBottom: 20 }}>
+          {['Lambda Architecture · Batch + Speed Layer', '15 views · 11 batch + 4 Lambda UNION', 'Data Vault 2.0 · SHA-256 identity resolution', 'Built on Railway + Vercel'].map((t) => (
+            <span key={t} style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#2D4060' }}>{t}</span>
+          ))}
         </div>
       </div>
-    </section>
+    </div>
   )
 }

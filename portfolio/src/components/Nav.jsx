@@ -1,74 +1,133 @@
-import { useState, useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
 import { Zap } from 'lucide-react'
 
 const LINKS = [
-  { href: '#pipeline', label: 'Pipeline' },
-  { href: '#schema', label: 'Schema' },
-  { href: '#dashboard', label: 'Dashboard' },
+  { to: '/', label: 'Pipeline' },
+  { to: '/schema', label: 'Schema' },
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/map', label: 'Map' },
+  { to: '/lineage', label: 'Lineage' },
 ]
 
 export default function Nav() {
-  const [active, setActive] = useState('pipeline')
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20)
-      const sections = ['pipeline', 'schema', 'dashboard']
-      for (const id of sections.reverse()) {
-        const el = document.getElementById(id)
-        if (el && window.scrollY >= el.offsetTop - 120) {
-          setActive(id)
-          break
-        }
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#07071acc] backdrop-blur-md border-b border-[#1e1e3f]' : ''
-      }`}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        height: 56,
+        background: 'rgba(4, 9, 18, 0.9)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #142038',
+      }}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div
+        style={{
+          maxWidth: 1280,
+          margin: '0 auto',
+          padding: '0 24px',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#00d4ff20] border border-[#00d4ff40] flex items-center justify-center">
-            <Zap size={14} className="text-cyan" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: 'rgba(0, 194, 255, 0.1)',
+              border: '1px solid rgba(0, 194, 255, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Zap size={14} style={{ color: '#00C2FF' }} />
           </div>
-          <span className="font-semibold text-[#e8e8ff]">GhostKitchen</span>
-          <span className="hidden sm:block text-[10px] text-[#4a4a6a] font-mono ml-1 border border-[#1e1e3f] px-2 py-0.5 rounded">
+          <span
+            style={{
+              fontFamily: 'Syne, sans-serif',
+              fontWeight: 700,
+              fontSize: 15,
+              color: '#D4E5FF',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            GhostKitchen
+          </span>
+          <span
+            style={{
+              display: 'none',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10,
+              color: '#2D4060',
+              border: '1px solid #142038',
+              padding: '2px 8px',
+              borderRadius: 4,
+              marginLeft: 4,
+            }}
+            className="sm:inline"
+          >
             DATA PLATFORM
           </span>
         </div>
 
         {/* Links */}
-        <div className="flex items-center gap-1">
-          {LINKS.map(({ href, label }) => {
-            const id = href.replace('#', '')
-            return (
-              <a
-                key={href}
-                href={href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  active === id
-                    ? 'text-[#00d4ff] bg-[#00d4ff10]'
-                    : 'text-[#8888aa] hover:text-[#e8e8ff] hover:bg-[#1e1e3f]'
-                }`}
-              >
-                {label}
-              </a>
-            )
-          })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {LINKS.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              style={({ isActive }) => ({
+                padding: '6px 14px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 500,
+                fontFamily: 'Syne, sans-serif',
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                color: isActive ? '#00C2FF' : '#6B82A8',
+                background: isActive ? 'rgba(0, 194, 255, 0.08)' : 'transparent',
+                border: '1px solid',
+                borderColor: isActive ? 'rgba(0, 194, 255, 0.2)' : 'transparent',
+              })}
+            >
+              {label}
+            </NavLink>
+          ))}
         </div>
 
-        {/* Badge */}
-        <div className="hidden md:flex items-center gap-2 text-xs text-[#4a4a6a] font-mono">
-          <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-live-pulse inline-block" />
-          Railway · Vercel
+        {/* Right badge */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 11,
+            color: '#2D4060',
+          }}
+        >
+          <span
+            className="animate-live-pulse"
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              background: '#00E5A0',
+              display: 'inline-block',
+            }}
+          />
+          <span>Railway · Vercel</span>
         </div>
       </div>
     </nav>

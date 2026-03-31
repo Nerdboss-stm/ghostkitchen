@@ -91,6 +91,12 @@ export async function fetchHealth() {
   return res.json()
 }
 
+export async function fetchLineage() {
+  const res = await fetch(`${BASE}/dashboard/lineage`)
+  if (!res.ok) throw new Error('lineage failed')
+  return res.json()
+}
+
 export async function fetchAllDashboard() {
   const [kpis, revenue, platforms, zones, sensors, customers, capacity] = await Promise.all([
     fetchKpis().catch(() => null),
