@@ -1,0 +1,215 @@
+// Static React Flow nodes + edges for the Star Schema Explorer
+// fact_order at center, 7 dims + 1 bridge at cardinal/intercardinal points
+
+export const SCHEMA_NODES = [
+  // ── FACT ──────────────────────────────────────────────────────────────────
+  {
+    id: 'fact_order',
+    type: 'factNode',
+    position: { x: 360, y: 280 },
+    data: {
+      label: 'fact_order',
+      rowCount: '~487',
+      description: 'Central order grain — one row per order. Joins to all 7 dimensions.',
+      columns: [
+        { name: 'order_key', type: 'SERIAL', role: 'pk' },
+        { name: 'order_hk', type: 'TEXT', role: 'fk', note: 'SHA-256 hash key' },
+        { name: 'date_key', type: 'INTEGER', role: 'fk' },
+        { name: 'time_key', type: 'INTEGER', role: 'fk' },
+        { name: 'kitchen_key', type: 'INTEGER', role: 'fk' },
+        { name: 'brand_key', type: 'INTEGER', role: 'fk' },
+        { name: 'customer_key', type: 'INTEGER', role: 'fk' },
+        { name: 'zone_key', type: 'INTEGER', role: 'fk' },
+        { name: 'driver_key', type: 'INTEGER', role: 'fk' },
+        { name: 'platform', type: 'TEXT', role: 'col' },
+        { name: 'total_cents', type: 'INTEGER', role: 'col' },
+        { name: 'item_count', type: 'INTEGER', role: 'col' },
+        { name: 'placed_at', type: 'TIMESTAMPTZ', role: 'col' },
+      ],
+      sampleRows: [
+        { order_key: 1, platform: 'uber_eats', total_cents: 2199, item_count: 2 },
+        { order_key: 2, platform: 'doordash', total_cents: 1499, item_count: 1 },
+      ],
+    },
+  },
+  // ── DIMENSIONS ────────────────────────────────────────────────────────────
+  {
+    id: 'dim_date',
+    type: 'dimNode',
+    position: { x: 360, y: 60 },
+    data: {
+      label: 'dim_date',
+      rowCount: '~731',
+      scdType: 'SCD0',
+      joinKey: 'date_key → fact_order.date_key',
+      description: '3-year date spine with year/quarter/month/week breakdowns.',
+      columns: [
+        { name: 'date_key', type: 'INTEGER', role: 'pk' },
+        { name: 'full_date', type: 'DATE', role: 'col' },
+        { name: 'year', type: 'INTEGER', role: 'col' },
+        { name: 'quarter', type: 'INTEGER', role: 'col' },
+        { name: 'month_name', type: 'TEXT', role: 'col' },
+        { name: 'day_name', type: 'TEXT', role: 'col' },
+        { name: 'is_weekend', type: 'BOOLEAN', role: 'col' },
+      ],
+      sampleRows: [
+        { date_key: 20260101, full_date: '2026-01-01', year: 2026, is_weekend: false },
+        { date_key: 20260331, full_date: '2026-03-31', year: 2026, is_weekend: false },
+      ],
+    },
+  },
+  {
+    id: 'dim_kitchen',
+    type: 'dimNode',
+    position: { x: 640, y: 100 },
+    data: {
+      label: 'dim_kitchen',
+      rowCount: '50',
+      scdType: 'SCD0',
+      joinKey: 'kitchen_key → fact_order.kitchen_key',
+      description: '50 dark kitchens across 10 Texas cities with GPS coordinates.',
+      columns: [
+        { name: 'kitchen_key', type: 'SERIAL', role: 'pk' },
+        { name: 'kitchen_id', type: 'TEXT', role: 'col', note: 'K-HOU-01 format' },
+        { name: 'city', type: 'TEXT', role: 'col' },
+        { name: 'city_abbrev', type: 'TEXT', role: 'col' },
+        { name: 'center_lat', type: 'NUMERIC', role: 'col' },
+        { name: 'center_lon', type: 'NUMERIC', role: 'col' },
+        { name: 'capacity_per_hour', type: 'INTEGER', role: 'col' },
+      ],
+      sampleRows: [
+        { kitchen_id: 'K-HOU-01', city: 'Houston', capacity_per_hour: 20 },
+        { kitchen_id: 'K-AUS-03', city: 'Austin', capacity_per_hour: 20 },
+      ],
+    },
+  },
+  {
+    id: 'dim_brand',
+    type: 'dimNode',
+    position: { x: 680, y: 300 },
+    data: {
+      label: 'dim_brand',
+      rowCount: '8',
+      scdType: 'SCD0',
+      joinKey: 'brand_key → fact_order.brand_key',
+      description: '8 virtual food brands — each kitchen runs 3-5 concurrently.',
+      columns: [
+        { name: 'brand_key', type: 'SERIAL', role: 'pk' },
+        { name: 'brand_name', type: 'TEXT', role: 'col' },
+        { name: 'cuisine_type', type: 'TEXT', role: 'col' },
+        { name: 'avg_prep_minutes', type: 'INTEGER', role: 'col' },
+      ],
+      sampleRows: [
+        { brand_name: 'Burger Beast', cuisine_type: 'American', avg_prep_minutes: 8 },
+        { brand_name: 'Dragon Wok', cuisine_type: 'Chinese', avg_prep_minutes: 12 },
+      ],
+    },
+  },
+  {
+    id: 'dim_customer',
+    type: 'dimNode',
+    position: { x: 580, y: 490 },
+    data: {
+      label: 'dim_customer',
+      rowCount: '~312',
+      scdType: 'SCD2',
+      joinKey: 'customer_key → fact_order.customer_key',
+      description: 'SHA-256 unified customer identity across all 3 platforms. PII masked.',
+      columns: [
+        { name: 'customer_key', type: 'SERIAL', role: 'pk' },
+        { name: 'customer_hk', type: 'TEXT', role: 'col', note: 'SHA-256 identity key' },
+        { name: 'email_hash', type: 'TEXT', role: 'col', note: 'No plaintext PII' },
+        { name: 'platform_count', type: 'INTEGER', role: 'col' },
+        { name: 'valid_from', type: 'DATE', role: 'col' },
+        { name: 'valid_to', type: 'DATE', role: 'col' },
+        { name: 'is_current', type: 'BOOLEAN', role: 'col' },
+      ],
+      sampleRows: [
+        { customer_hk: 'a3f2...', platform_count: 2, is_current: true },
+        { customer_hk: 'b1e9...', platform_count: 1, is_current: true },
+      ],
+    },
+  },
+  {
+    id: 'dim_delivery_zone',
+    type: 'dimNode',
+    position: { x: 120, y: 490 },
+    data: {
+      label: 'dim_delivery_zone',
+      rowCount: '50',
+      scdType: 'SCD0',
+      joinKey: 'zone_key → fact_order.zone_key',
+      description: '50 delivery zones (5 per city): Downtown, Midtown, Uptown, Suburbs N/S.',
+      columns: [
+        { name: 'zone_key', type: 'SERIAL', role: 'pk' },
+        { name: 'zone_id', type: 'TEXT', role: 'col', note: 'HOU-DOWNTOWN format' },
+        { name: 'city', type: 'TEXT', role: 'col' },
+        { name: 'zone_type', type: 'TEXT', role: 'col' },
+        { name: 'center_lat', type: 'NUMERIC', role: 'col' },
+        { name: 'center_lon', type: 'NUMERIC', role: 'col' },
+      ],
+      sampleRows: [
+        { zone_id: 'HOU-DOWNTOWN', city: 'HOU', zone_type: 'DOWNTOWN' },
+        { zone_id: 'DAL-SUBURBS-N', city: 'DAL', zone_type: 'SUBURBS-N' },
+      ],
+    },
+  },
+  {
+    id: 'dim_driver',
+    type: 'dimNode',
+    position: { x: 50, y: 300 },
+    data: {
+      label: 'dim_driver',
+      rowCount: '200',
+      scdType: 'SCD0',
+      joinKey: 'driver_key → fact_order.driver_key',
+      description: '200 drivers (DRV-1000 to DRV-1199), 20 per city, mixed vehicle types.',
+      columns: [
+        { name: 'driver_key', type: 'SERIAL', role: 'pk' },
+        { name: 'driver_id', type: 'TEXT', role: 'col', note: 'DRV-1000 format' },
+        { name: 'city', type: 'TEXT', role: 'col' },
+        { name: 'vehicle_type', type: 'TEXT', role: 'col' },
+      ],
+      sampleRows: [
+        { driver_id: 'DRV-1000', city: 'Houston', vehicle_type: 'bicycle' },
+        { driver_id: 'DRV-1042', city: 'Dallas', vehicle_type: 'car' },
+      ],
+    },
+  },
+  {
+    id: 'dim_menu_item',
+    type: 'dimNode',
+    position: { x: 100, y: 100 },
+    data: {
+      label: 'dim_menu_item',
+      rowCount: '~47',
+      scdType: 'SCD2',
+      joinKey: 'menu_item_key (via fact_order items)',
+      description: 'Menu item price history via SCD2 — full audit trail of price changes.',
+      columns: [
+        { name: 'menu_item_key', type: 'SERIAL', role: 'pk' },
+        { name: 'item_id', type: 'TEXT', role: 'col' },
+        { name: 'item_name', type: 'TEXT', role: 'col' },
+        { name: 'brand', type: 'TEXT', role: 'col' },
+        { name: 'price_cents', type: 'INTEGER', role: 'col' },
+        { name: 'valid_from', type: 'DATE', role: 'col' },
+        { name: 'valid_to', type: 'DATE', role: 'col' },
+        { name: 'is_current', type: 'BOOLEAN', role: 'col' },
+      ],
+      sampleRows: [
+        { item_name: 'Smash Burger', brand: 'Burger Beast', price_cents: 899, is_current: true },
+        { item_name: 'Brisket Plate', brand: 'BBQ Barn', price_cents: 1499, is_current: true },
+      ],
+    },
+  },
+]
+
+export const SCHEMA_EDGES = [
+  { id: 'e-date', source: 'dim_date', target: 'fact_order', animated: true },
+  { id: 'e-kitchen', source: 'dim_kitchen', target: 'fact_order', animated: true },
+  { id: 'e-brand', source: 'dim_brand', target: 'fact_order', animated: true },
+  { id: 'e-customer', source: 'dim_customer', target: 'fact_order', animated: true },
+  { id: 'e-zone', source: 'dim_delivery_zone', target: 'fact_order', animated: true },
+  { id: 'e-driver', source: 'dim_driver', target: 'fact_order', animated: true },
+  { id: 'e-menu', source: 'dim_menu_item', target: 'fact_order', animated: true },
+]
