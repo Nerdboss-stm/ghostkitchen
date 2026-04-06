@@ -1,30 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600;1,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #111111;
-  --surface: #1C1C1E;
-  --surface-2: #252528;
-  --border: #2C2C2E;
-  --border-bright: #3A3A3C;
-  --teal: #E8601C;
-  --emerald: #22C55E;
-  --amber: #F59E0B;
-  --crimson: #EF4444;
-  --violet: #A78BFA;
-  --text-1: #F4F4F5;
-  --text-2: #A1A1AA;
-  --text-3: #636366;
+  --bg: #FAF8F4;
+  --surface: #F3EFE8;
+  --surface-2: #EDE8DF;
+  --border: #D9D1C4;
+  --border-bright: #C4B99A;
 
-  /* Legacy aliases for backward compat */
+  --gold: #BF953F;
+  --gold-light: #E8D5A3;
+  --terracotta: #C0614A;
+  --sage: #4A7C59;
+  --blush: #D4866A;
+
+  --text-1: #1C1A16;
+  --text-2: #6B6256;
+  --text-3: #A09488;
+
+  /* Legacy aliases */
+  --teal: var(--gold);
+  --emerald: var(--sage);
+  --amber: var(--gold);
+  --crimson: var(--terracotta);
+  --violet: var(--blush);
   --card: var(--surface-2);
   --border-old: var(--border);
-  --cyan: var(--teal);
-  --green: var(--emerald);
-  --purple: var(--violet);
-  --red: var(--crimson);
+  --cyan: var(--gold);
+  --green: var(--sage);
+  --purple: var(--blush);
+  --red: var(--terracotta);
   --t1: var(--text-1);
   --t2: var(--text-2);
   --t3: var(--text-3);
@@ -56,32 +63,31 @@ body {
   overflow-y: auto;
 }
 
-/* Dot grid background */
+/* Warm dot grid — subtle linen texture */
 .dot-grid {
-  background-image: radial-gradient(circle, #2C2C2E 1px, transparent 1px);
+  background-image: radial-gradient(circle, #D9D1C4 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
-/* Scanline texture */
-.scanline {
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-}
-
-/* Neon glow animations */
+/* Soft lift animation for CTA — luxury breathes */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2); }
-  50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), 0 0 70px rgba(245, 158, 11, 0.4); }
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(191, 149, 63, 0.2), 0 2px 6px rgba(28, 26, 22, 0.06);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 10px 36px rgba(191, 149, 63, 0.38), 0 4px 14px rgba(28, 26, 22, 0.08);
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes pulseGlowGreen {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 229, 160, 0.4), 0 0 40px rgba(0, 229, 160, 0.2); }
-  50% { box-shadow: 0 0 35px rgba(0, 229, 160, 0.8), 0 0 70px rgba(0, 229, 160, 0.4); }
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(74, 124, 89, 0.2), 0 2px 6px rgba(28, 26, 22, 0.06);
+  }
+  50% {
+    box-shadow: 0 10px 32px rgba(74, 124, 89, 0.35), 0 4px 14px rgba(28, 26, 22, 0.08);
+  }
 }
 
 @keyframes blink {
@@ -141,8 +147,8 @@ body {
   100% { opacity: 0; transform: translateX(8px); }
 }
 
-.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-.animate-pulse-glow-green { animation: pulseGlowGreen 2s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+.animate-pulse-glow-green { animation: pulseGlowGreen 2.5s ease-in-out infinite; }
 .animate-blink { animation: blink 1s step-end infinite; }
 .animate-scroll-up { animation: scrollUp 12s linear infinite; }
 .animate-count-up { animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -154,9 +160,9 @@ body {
 .animate-flow-line { animation: flowLine 1.5s linear infinite; }
 .animate-data-flow { animation: dataFlow 2s ease-in-out infinite; }
 
-/* Terminal styles */
+/* Elegant log panel (replacing dark terminal) */
 .terminal {
-  background: #0A0A0A;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
@@ -166,7 +172,7 @@ body {
 }
 
 .terminal-header {
-  background: var(--surface);
+  background: var(--surface-2);
   padding: 8px 12px;
   display: flex;
   align-items: center;
@@ -191,28 +197,29 @@ body {
 .terminal-body::-webkit-scrollbar-track { background: transparent; }
 .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* Card styles */
+/* Card styles — warm surface, soft shadow */
 .gk-card {
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(28, 26, 22, 0.05);
 }
 
 .gk-card-glow-teal {
-  border-color: rgba(245, 158, 11, 0.3);
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.06), inset 0 1px 0 rgba(245, 158, 11, 0.1);
+  border-color: rgba(191, 149, 63, 0.3);
+  box-shadow: 0 4px 24px rgba(191, 149, 63, 0.08), inset 0 1px 0 rgba(191, 149, 63, 0.1);
 }
 
 .gk-card-glow-emerald {
-  border-color: rgba(0, 229, 160, 0.3);
-  box-shadow: 0 0 24px rgba(0, 229, 160, 0.06), inset 0 1px 0 rgba(0, 229, 160, 0.1);
+  border-color: rgba(74, 124, 89, 0.3);
+  box-shadow: 0 4px 24px rgba(74, 124, 89, 0.08), inset 0 1px 0 rgba(74, 124, 89, 0.1);
 }
 
 /* Legacy card aliases */
-.gk-card-glow-cyan { border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 20px rgba(245, 158, 11, 0.05), inset 0 1px 0 rgba(245, 158, 11, 0.1); }
-.gk-card-glow-green { border-color: rgba(0, 229, 160, 0.3); box-shadow: 0 0 20px rgba(0, 229, 160, 0.05), inset 0 1px 0 rgba(0, 229, 160, 0.1); }
+.gk-card-glow-cyan { border-color: rgba(191, 149, 63, 0.3); box-shadow: 0 4px 20px rgba(191, 149, 63, 0.06), inset 0 1px 0 rgba(191, 149, 63, 0.1); }
+.gk-card-glow-green { border-color: rgba(74, 124, 89, 0.3); box-shadow: 0 4px 20px rgba(74, 124, 89, 0.06), inset 0 1px 0 rgba(74, 124, 89, 0.1); }
 
-/* Stage connector line */
+/* Stage connector */
 .stage-connector {
   width: 2px;
   background: linear-gradient(to bottom, transparent, var(--border));
@@ -221,7 +228,7 @@ body {
 }
 
 .stage-connector.done {
-  background: linear-gradient(to bottom, var(--teal), rgba(245, 158, 11, 0.3));
+  background: linear-gradient(to bottom, #BF953F, rgba(191, 149, 63, 0.25));
 }
 
 /* Section dividers */
@@ -240,61 +247,62 @@ body {
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* React Flow overrides */
+/* React Flow overrides — warm ivory canvas */
 .react-flow__background { background: var(--bg) !important; }
 .react-flow__minimap { background: var(--surface-2) !important; border: 1px solid var(--border) !important; }
 .react-flow__controls button {
-  background: var(--surface-2) !important;
+  background: var(--surface) !important;
   border: 1px solid var(--border) !important;
   color: var(--text-2) !important;
+  box-shadow: 0 2px 8px rgba(28, 26, 22, 0.06) !important;
 }
 .react-flow__controls button:hover {
-  background: var(--border) !important;
+  background: var(--surface-2) !important;
   color: var(--text-1) !important;
 }
 
-/* Leaflet dark theme overrides */
+/* Leaflet warm light theme overrides */
 .leaflet-container {
-  background: #111111 !important;
+  background: #FAF8F4 !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #1C1C1E !important;
-  border: 1px solid #3A3A3C !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
-  color: #F4F4F5 !important;
+  background: #F3EFE8 !important;
+  border: 1px solid #D9D1C4 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(28, 26, 22, 0.12) !important;
+  color: #1C1A16 !important;
 }
 
 .leaflet-popup-tip {
-  background: #1C1C1E !important;
+  background: #F3EFE8 !important;
 }
 
 .leaflet-popup-content {
   margin: 12px 16px !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 12px !important;
-  color: #F4F4F5 !important;
+  color: #1C1A16 !important;
 }
 
 .leaflet-bar a {
-  background: #1C1C1E !important;
-  border: 1px solid #3A3A3C !important;
-  color: #A1A1AA !important;
+  background: #F3EFE8 !important;
+  border: 1px solid #D9D1C4 !important;
+  color: #6B6256 !important;
 }
 
 .leaflet-bar a:hover {
-  background: #252528 !important;
-  color: #F4F4F5 !important;
+  background: #EDE8DF !important;
+  color: #1C1A16 !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(17, 17, 17, 0.8) !important;
-  color: #636366 !important;
+  background: rgba(250, 248, 244, 0.9) !important;
+  color: #A09488 !important;
   font-size: 10px !important;
 }
 
 .leaflet-control-attribution a {
-  color: #636366 !important;
+  color: #A09488 !important;
 }

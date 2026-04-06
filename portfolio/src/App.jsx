@@ -8,7 +8,7 @@ import DataLineage from './components/DataLineage'
 
 export default function App() {
   return (
-    <div style={{ background: '#040912', minHeight: '100dvh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
       <Nav />
       <Routes>
         <Route path="/" element={<PipelineOrchestrator />} />

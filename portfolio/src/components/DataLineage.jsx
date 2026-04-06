@@ -5,9 +5,9 @@ const LAYERS = [
   {
     id: 'sources',
     label: 'SOURCES',
-    color: '#FFB547',
-    glow: 'rgba(255,181,71,0.15)',
-    border: 'rgba(255,181,71,0.3)',
+    color: '#BF953F',
+    glow: 'rgba(191,149,63,0.06)',
+    border: 'rgba(191,149,63,0.22)',
     tables: [
       { name: 'Uber Eats API', desc: 'Order webhook stream', rows: null },
       { name: 'DoorDash API', desc: 'REST polling endpoint', rows: null },
@@ -20,9 +20,9 @@ const LAYERS = [
   {
     id: 'bronze',
     label: 'BRONZE',
-    color: '#CD7F32',
-    glow: 'rgba(205,127,50,0.12)',
-    border: 'rgba(205,127,50,0.3)',
+    color: '#7A6B52',
+    glow: 'rgba(122,107,82,0.06)',
+    border: 'rgba(122,107,82,0.22)',
     tables: [
       { name: 'bronze_orders', desc: 'Raw order JSON, no transforms', rows: null },
       { name: 'bronze_sensors', desc: 'Raw IoT readings', rows: null },
@@ -33,9 +33,9 @@ const LAYERS = [
   {
     id: 'silver',
     label: 'SILVER',
-    color: '#7C5CFC',
-    glow: 'rgba(124,92,252,0.12)',
-    border: 'rgba(124,92,252,0.3)',
+    color: '#4A7C59',
+    glow: 'rgba(74,124,89,0.06)',
+    border: 'rgba(74,124,89,0.22)',
     tables: [
       { name: 'silver_hub_order', desc: 'Data Vault hub · order_hk', rows: null },
       { name: 'silver_hub_customer', desc: 'Data Vault hub · customer_hk', rows: null },
@@ -46,9 +46,9 @@ const LAYERS = [
   {
     id: 'gold',
     label: 'GOLD',
-    color: '#FFB547',
-    glow: 'rgba(255,181,71,0.12)',
-    border: 'rgba(255,181,71,0.3)',
+    color: '#BF953F',
+    glow: 'rgba(191,149,63,0.06)',
+    border: 'rgba(191,149,63,0.22)',
     tables: [
       { name: 'dim_date', desc: 'SCD0 · Calendar attributes', rows: null },
       { name: 'dim_kitchen', desc: 'SCD1 · Kitchen master', rows: null },
@@ -63,9 +63,9 @@ const LAYERS = [
   {
     id: 'analytics',
     label: 'ANALYTICS',
-    color: '#00E5A0',
-    glow: 'rgba(0,229,160,0.12)',
-    border: 'rgba(0,229,160,0.3)',
+    color: '#4A7C59',
+    glow: 'rgba(74,124,89,0.06)',
+    border: 'rgba(74,124,89,0.22)',
     tables: [
       { name: 'Live Dashboard', desc: 'KPIs · Charts · Real-time', rows: null },
       { name: 'Kitchen Map', desc: 'Geo utilization · 50 locations', rows: null },
@@ -97,10 +97,10 @@ function FlowArrow({ color }) {
           style={{ strokeDashoffset: 0, animation: 'flowDash 1.5s linear infinite' }}
         />
       </svg>
-      {/* Animated dots */}
+      {/* Animated dot */}
       <div style={{
         position: 'absolute', width: 6, height: 6, borderRadius: '50%',
-        background: color, opacity: 0.7,
+        background: color, opacity: 0.6,
         animation: 'dataFlow 2s ease-in-out infinite',
       }} />
     </div>
@@ -118,28 +118,28 @@ function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onCl
       style={{
         padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
         border: `1px solid`,
-        borderColor: isSelected ? layerColor : hovered ? layerBorder : '#2C2C2E',
-        background: isSelected ? layerGlow : hovered ? 'rgba(255,255,255,0.02)' : '#252528',
+        borderColor: isSelected ? layerColor : hovered ? layerBorder : '#D9D1C4',
+        background: isSelected ? layerGlow : hovered ? 'rgba(28,26,22,0.02)' : '#F3EFE8',
         transition: 'all 0.15s',
-        boxShadow: isSelected ? `0 0 16px ${layerGlow}` : 'none',
+        boxShadow: isSelected ? `0 4px 16px ${layerGlow}` : hovered ? '0 2px 8px rgba(28,26,22,0.06)' : 'none',
         marginBottom: 6,
       }}
     >
       <div style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11, fontWeight: 500,
-        color: isSelected ? layerColor : '#F4F4F5',
+        color: isSelected ? layerColor : '#1C1A16',
         marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
         {table.name}
       </div>
-      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', marginBottom: table.rows != null ? 4 : 0 }}>
+      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#A09488', marginBottom: table.rows != null ? 4 : 0 }}>
         {table.desc}
       </div>
       {table.rows != null && (
         <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 13, color: layerColor }}>
           {table.rows.toLocaleString()}
-          <span style={{ fontSize: 9, fontWeight: 400, color: '#636366', marginLeft: 3 }}>rows</span>
+          <span style={{ fontSize: 9, fontWeight: 400, color: '#A09488', marginLeft: 3 }}>rows</span>
         </div>
       )}
     </div>
@@ -160,7 +160,6 @@ export default function DataLineage() {
       .catch(() => {})
   }, [])
 
-  // Merge API row counts into layer tables
   const layers = LAYERS.map((layer) => ({
     ...layer,
     tables: layer.tables.map((t) => {
@@ -183,18 +182,25 @@ export default function DataLineage() {
       {/* Header */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#F4F4F5', marginBottom: 2 }}>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 600,
+            fontSize: 26,
+            color: '#1C1A16',
+            marginBottom: 2,
+          }}>
             Data Lineage
           </h2>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#A09488' }}>
             Sources → Bronze → Silver → Gold → Analytics · End-to-end data provenance
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#A09488' }}>
           {lastRun && <span>Last run: {lastRun}</span>}
           <span style={{
             display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20,
-            border: '1px solid #2C2C2E', color: '#636366',
+            border: '1px solid #D9D1C4', color: '#A09488',
           }}>
             5 layers · 25 tables
           </span>
@@ -226,7 +232,7 @@ export default function DataLineage() {
                   }}>
                     {layer.label}
                   </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#636366', marginLeft: 'auto' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#A09488', marginLeft: 'auto' }}>
                     {layer.tables.length}
                   </span>
                 </div>
@@ -264,34 +270,35 @@ export default function DataLineage() {
           className="gk-card animate-count-up"
           style={{
             flexShrink: 0, padding: '12px 16px',
-            borderColor: selectedInfo.layerColor + '40',
-            background: '#1C1C1E',
+            borderColor: selectedInfo.layerColor + '30',
             display: 'flex', alignItems: 'center', gap: 24,
             flexWrap: 'wrap',
           }}
         >
           <div>
-            <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
+            <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#A09488', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
               {selectedInfo.layerLabel} layer
             </div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 14, color: selectedInfo.layerColor }}>
               {selectedInfo.name}
             </div>
           </div>
-          <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#A1A1AA' }}>
+          <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#6B6256' }}>
             {selectedInfo.desc}
           </div>
           {selectedInfo.rows != null && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#636366', marginBottom: 2 }}>ROW COUNT</div>
-              <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 20, color: selectedInfo.layerColor }}>
+              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#A09488', marginBottom: 2 }}>ROW COUNT</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontWeight: 600, fontSize: 24, color: selectedInfo.layerColor }}>
                 {selectedInfo.rows.toLocaleString()}
               </div>
             </div>
           )}
           <button
             onClick={() => setSelectedTable(null)}
-            style={{ background: 'none', border: '1px solid #2C2C2E', borderRadius: 6, padding: '4px 10px', color: '#636366', cursor: 'pointer', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }}
+            style={{ background: 'none', border: '1px solid #D9D1C4', borderRadius: 6, padding: '4px 10px', color: '#A09488', cursor: 'pointer', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", transition: 'color 0.15s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#1C1A16' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#A09488' }}
           >
             ✕
           </button>
@@ -301,8 +308,8 @@ export default function DataLineage() {
       {/* Bottom bar */}
       <div style={{
         flexShrink: 0, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#636366',
-        paddingTop: 6, borderTop: '1px solid #2C2C2E',
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#A09488',
+        paddingTop: 6, borderTop: '1px solid #D9D1C4',
       }}>
         {layers.map((l) => (
           <span key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
