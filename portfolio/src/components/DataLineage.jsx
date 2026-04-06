@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { fetchLineage } from '../lib/api'
 
 const LAYERS = [
@@ -74,62 +74,132 @@ const LAYERS = [
   },
 ]
 
-function FlowArrow({ color }) {
+function FlowArrow({ color, boosted }) {
+  const canvasRef = useRef(null)
+  const animRef = useRef(null)
+  const particlesRef = useRef(
+    Array.from({ length: 6 }, (_, i) => ({
+      t: i / 6,
+      speed: 0.003 + Math.random() * 0.005,
+    }))
+  )
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+
+    const ro = new ResizeObserver(() => {
+      canvas.width = 52
+      canvas.height = canvas.offsetHeight || canvas.parentElement?.offsetHeight || 120
+    })
+    ro.observe(canvas.parentElement || canvas)
+    canvas.width = 52
+    canvas.height = canvas.offsetHeight || 120
+
+    const draw = () => {
+      const h = canvas.height
+      ctx.clearRect(0, 0, 52, h)
+      const cy = h / 2
+
+      ctx.beginPath()
+      ctx.moveTo(0, cy)
+      ctx.lineTo(42, cy)
+      ctx.strokeStyle = 'rgba(191,149,63,0.12)'
+      ctx.lineWidth = 1
+      ctx.stroke()
+
+      const speedMult = boosted ? 2 : 1
+      for (const p of particlesRef.current) {
+        p.t = (p.t + p.speed * speedMult) % 1
+        const x = p.t * 42
+        const g = ctx.createRadialGradient(x, cy, 0, x, cy, 6)
+        g.addColorStop(0, 'rgba(191,149,63,0.7)')
+        g.addColorStop(1, 'rgba(191,149,63,0)')
+        ctx.beginPath()
+        ctx.arc(x, cy, 6, 0, Math.PI * 2)
+        ctx.fillStyle = g
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(x, cy, 1.5, 0, Math.PI * 2)
+        ctx.fillStyle = color
+        ctx.fill()
+      }
+
+      ctx.beginPath()
+      ctx.moveTo(42, cy - 5)
+      ctx.lineTo(50, cy)
+      ctx.lineTo(42, cy + 5)
+      ctx.closePath()
+      ctx.fillStyle = color
+      ctx.fill()
+
+      animRef.current = requestAnimationFrame(draw)
+    }
+    draw()
+
+    return () => {
+      cancelAnimationFrame(animRef.current)
+      ro.disconnect()
+    }
+  }, [color, boosted])
+
   return (
-    <div style={{
-      width: 48, flexShrink: 0, display: 'flex',
-      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      position: 'relative',
-    }}>
-      <svg width="48" height="100%" style={{ position: 'absolute', top: 0, left: 0, height: '100%' }}>
-        <defs>
-          <marker id={`arrow-${color.replace('#', '')}`} markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill={color} />
-          </marker>
-        </defs>
-        <line
-          x1="0" y1="50%" x2="38" y2="50%"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeDasharray="6 3"
-          markerEnd={`url(#arrow-${color.replace('#', '')})`}
-          className="animate-flow-line"
-          style={{ strokeDashoffset: 0, animation: 'flowDash 1.5s linear infinite' }}
-        />
-      </svg>
-      {/* Animated dot */}
-      <div style={{
-        position: 'absolute', width: 6, height: 6, borderRadius: '50%',
-        background: color, opacity: 0.6,
-        animation: 'dataFlow 2s ease-in-out infinite',
-      }} />
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={52}
+      style={{ display: 'block', width: 52, height: '100%', minHeight: 80 }}
+    />
   )
 }
 
-function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onClick }) {
+function TableCard({ table, layerColor, layerBorder, layerGlow, layerLabel, isSelected, onClick, onLayerHover, onLayerLeave }) {
   const [hovered, setHovered] = useState(false)
 
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => { setHovered(true); onLayerHover && onLayerHover() }}
+      onMouseLeave={() => { setHovered(false); onLayerLeave && onLayerLeave() }}
       style={{
         padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-        border: `1px solid`,
-        borderColor: isSelected ? layerColor : hovered ? layerBorder : '#D9D1C4',
-        background: isSelected ? layerGlow : hovered ? 'rgba(28,26,22,0.02)' : '#F3EFE8',
+        borderLeft: isSelected ? `3px solid ${layerColor}` : hovered ? `3px solid ${layerColor}` : '3px solid transparent',
+        border: isSelected
+          ? `1px solid ${layerColor}`
+          : hovered
+          ? `1px solid ${layerBorder}`
+          : '1px solid #D9D1C4',
+        borderLeft: isSelected ? `3px solid ${layerColor}` : hovered ? `3px solid ${layerColor}` : '3px solid transparent',
+        background: isSelected ? layerGlow : hovered ? 'rgba(191,149,63,0.04)' : '#F3EFE8',
         transition: 'all 0.15s',
         boxShadow: isSelected ? `0 4px 16px ${layerGlow}` : hovered ? '0 2px 8px rgba(28,26,22,0.06)' : 'none',
         marginBottom: 6,
+        position: 'relative',
       }}
     >
+      {isSelected && (
+        <span style={{
+          position: 'absolute', top: 6, right: 6,
+          width: 6, height: 6, borderRadius: '50%',
+          background: layerColor,
+        }} />
+      )}
+      {hovered && !isSelected && (
+        <span style={{
+          position: 'absolute', top: 4, right: 6,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 8, fontWeight: 600, color: layerColor,
+          letterSpacing: '0.06em', opacity: 0.8,
+        }}>
+          {layerLabel}
+        </span>
+      )}
       <div style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11, fontWeight: 500,
         color: isSelected ? layerColor : '#1C1A16',
         marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        paddingRight: hovered || isSelected ? 36 : 0,
       }}>
         {table.name}
       </div>
@@ -146,10 +216,57 @@ function TableCard({ table, layerColor, layerBorder, layerGlow, isSelected, onCl
   )
 }
 
+function JourneyTrace({ currentLayerLabel }) {
+  const allLabels = ['SOURCES', 'BRONZE', 'SILVER', 'GOLD', 'ANALYTICS']
+  const currentIdx = allLabels.indexOf(currentLayerLabel)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+      {allLabels.map((label, i) => (
+        <div key={label} style={{ display: 'flex', alignItems: 'center' }}>
+          {i > 0 && (
+            <div style={{ width: 18, height: 1, background: i <= currentIdx ? 'rgba(191,149,63,0.5)' : '#D9D1C4', margin: '0 2px' }} />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{
+              width: i === currentIdx ? 9 : 6,
+              height: i === currentIdx ? 9 : 6,
+              borderRadius: '50%',
+              background: i === currentIdx ? '#BF953F' : i < currentIdx ? 'rgba(191,149,63,0.35)' : '#D9D1C4',
+              transition: 'all 0.2s',
+            }} />
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 8,
+              color: i === currentIdx ? '#BF953F' : '#A09488',
+              fontWeight: i === currentIdx ? 700 : 400,
+              letterSpacing: '0.04em',
+            }}>
+              {label}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function DataLineage() {
   const [lineageData, setLineageData] = useState(null)
   const [selectedTable, setSelectedTable] = useState(null)
   const [lastRun, setLastRun] = useState(null)
+  const [hoveredLayer, setHoveredLayer] = useState(null)
+
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `
+    document.head.appendChild(style)
+    return () => style.remove()
+  }, [])
 
   useEffect(() => {
     fetchLineage()
@@ -213,54 +330,73 @@ export default function DataLineage() {
           display: 'flex', alignItems: 'stretch', gap: 0,
           minWidth: 'max-content', height: '100%', paddingBottom: 4,
         }}>
-          {layers.map((layer, lIdx) => (
-            <div key={layer.id} style={{ display: 'flex', alignItems: 'stretch' }}>
-              {/* Layer column */}
-              <div style={{ width: 196, display: 'flex', flexDirection: 'column' }}>
-                {/* Layer header */}
+          {layers.map((layer, lIdx) => {
+            const isHovered = hoveredLayer === layer.id
+            const otherHovered = hoveredLayer !== null && !isHovered
+            return (
+              <div key={layer.id} style={{ display: 'flex', alignItems: 'stretch' }}>
+                {/* Layer column */}
                 <div style={{
-                  padding: '6px 10px', marginBottom: 8, borderRadius: 6,
-                  border: `1px solid ${layer.border}`,
-                  background: layer.glow,
-                  display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                  width: 196, display: 'flex', flexDirection: 'column',
+                  opacity: 0,
+                  animation: 'fadeSlideIn 0.4s ease forwards',
+                  animationDelay: `${lIdx * 80}ms`,
                 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: layer.color, flexShrink: 0 }} />
-                  <span style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontWeight: 600, fontSize: 10, color: layer.color,
-                    textTransform: 'uppercase', letterSpacing: '0.1em',
+                  {/* Layer header */}
+                  <div style={{
+                    padding: '6px 10px', marginBottom: 8, borderRadius: 6,
+                    border: `1px solid ${isHovered ? 'rgba(191,149,63,0.4)' : layer.border}`,
+                    background: isHovered ? 'rgba(191,149,63,0.12)' : layer.glow,
+                    display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                    opacity: otherHovered ? 0.6 : 1,
+                    transition: 'all 0.2s',
                   }}>
-                    {layer.label}
-                  </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#A09488', marginLeft: 'auto' }}>
-                    {layer.tables.length}
-                  </span>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: layer.color, flexShrink: 0 }} />
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontWeight: 600, fontSize: 10, color: layer.color,
+                      textTransform: 'uppercase', letterSpacing: '0.1em',
+                    }}>
+                      {layer.label}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#A09488', marginLeft: 'auto' }}>
+                      {layer.tables.length}
+                    </span>
+                  </div>
+
+                  {/* Table cards */}
+                  <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
+                    {layer.tables.map((table) => (
+                      <TableCard
+                        key={table.name}
+                        table={table}
+                        layerColor={layer.color}
+                        layerBorder={layer.border}
+                        layerGlow={layer.glow}
+                        layerLabel={layer.label}
+                        isSelected={selectedTable === table.name}
+                        onClick={() => setSelectedTable(selectedTable === table.name ? null : table.name)}
+                        onLayerHover={() => setHoveredLayer(layer.id)}
+                        onLayerLeave={() => setHoveredLayer(null)}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                {/* Table cards */}
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
-                  {layer.tables.map((table) => (
-                    <TableCard
-                      key={table.name}
-                      table={table}
-                      layerColor={layer.color}
-                      layerBorder={layer.border}
-                      layerGlow={layer.glow}
-                      isSelected={selectedTable === table.name}
-                      onClick={() => setSelectedTable(selectedTable === table.name ? null : table.name)}
+                {/* Arrow connector between layers */}
+                {lIdx < layers.length - 1 && (
+                  <div style={{ width: 52, alignSelf: 'stretch', flexShrink: 0 }}>
+                    <FlowArrow
+                      color={layers[lIdx + 1].color}
+                      boosted={
+                        hoveredLayer === layer.id || hoveredLayer === layers[lIdx + 1].id
+                      }
                     />
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
-
-              {/* Arrow connector between layers */}
-              {lIdx < layers.length - 1 && (
-                <div style={{ width: 48, alignSelf: 'center', flexShrink: 0, padding: '0 4px' }}>
-                  <FlowArrow color={layers[lIdx + 1].color} />
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -286,10 +422,11 @@ export default function DataLineage() {
           <div style={{ flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#6B6256' }}>
             {selectedInfo.desc}
           </div>
+          <JourneyTrace currentLayerLabel={selectedInfo.layerLabel} />
           {selectedInfo.rows != null && (
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: '#A09488', marginBottom: 2 }}>ROW COUNT</div>
-              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontWeight: 600, fontSize: 24, color: selectedInfo.layerColor }}>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 24, color: selectedInfo.layerColor, fontVariantNumeric: 'tabular-nums' }}>
                 {selectedInfo.rows.toLocaleString()}
               </div>
             </div>

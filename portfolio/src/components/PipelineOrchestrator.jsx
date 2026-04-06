@@ -500,9 +500,10 @@ export default function PipelineOrchestrator() {
               ].map(({ v, l }) => (
                 <div key={l}>
                   <div style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontStyle: 'italic', fontWeight: 700,
-                    fontSize: 30, color: '#BF953F', lineHeight: 1,
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 800,
+                    fontSize: 32, color: '#BF953F', lineHeight: 1,
+                    fontVariantNumeric: 'tabular-nums',
                   }}>{v}</div>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#A09488', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 3 }}>{l}</div>
                 </div>
