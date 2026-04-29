@@ -158,11 +158,27 @@ def normalize_ownapp(df: DataFrame) -> DataFrame:
 
 
 def deduplicate_orders(df: DataFrame) -> DataFrame:
-    window = Window.partitionBy("platform", "platform_order_id") \
-                   .orderBy(F.col("order_timestamp").asc())
-    return df.withColumn("row_num", F.row_number().over(window)) \
-             .filter(F.col("row_num") == 1) \
-             .drop("row_num")
+    # Step 1: remove exact duplicate messages by composite key hash.
+    # Fixes DoorDash read-order artifact where the same event arrives twice with
+    # identical platform_order_id + timestamp + amount. See issue #3.
+    row_hash = F.sha2(F.concat_ws("|",
+        F.col("platform"),
+        F.col("platform_order_id"),
+        F.col("order_timestamp").cast("string"),
+        F.col("order_total_cents").cast("string"),
+    ), 256)
+    df = df.withColumn("_row_hash", row_hash)
+    exact_window = Window.partitionBy("_row_hash").orderBy(F.col("ingestion_timestamp").asc())
+    df = df.withColumn("_rn", F.row_number().over(exact_window)) \
+           .filter(F.col("_rn") == 1) \
+           .drop("_rn", "_row_hash")
+
+    # Step 2: keep earliest event per order (the placed/created state).
+    order_window = Window.partitionBy("platform", "platform_order_id") \
+                         .orderBy(F.col("order_timestamp").asc())
+    return df.withColumn("_rn", F.row_number().over(order_window)) \
+             .filter(F.col("_rn") == 1) \
+             .drop("_rn")
 
 
 def align_all_platforms(uber_df, doordash_df, ownapp_df) -> DataFrame:
