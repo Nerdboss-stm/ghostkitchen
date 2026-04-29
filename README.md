@@ -1,9 +1,7 @@
-# GhostKitchen — Dark Kitchen Intelligence Platform
+# GhostKitchen
 
-End-to-end data platform for dark kitchen (cloud kitchen) operations.
-Ingests order events from 3 food delivery platforms, kitchen IoT sensors,
-delivery GPS pings, and menu CDC changes — then builds a unified analytics
-Gold layer with identity resolution across platforms.
+High-throughput order event pipeline — Kafka + Spark Structured Streaming +
+Delta Lake medallion, with Data Vault 2.0 identity resolution across 3 ordering platforms.
 
 ## Architecture
 
